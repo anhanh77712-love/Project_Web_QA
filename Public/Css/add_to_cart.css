@@ -1,0 +1,38 @@
+/* Container chứa các thông báo */
+#toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+
+/* Giao diện từng thông báo */
+.toast-msg {
+    min-width: 250px;
+    margin-bottom: 10px;
+    background-color: #28a745; /* Màu xanh lá thành công */
+    color: #fff;
+    padding: 15px 20px;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideInRight 0.5s ease forwards, fadeOut 0.5s ease 3s forwards;
+    /* 3s là thời gian hiện, sau đó fadeOut */
+}
+
+.toast-msg.error {
+    background-color: #dc3545; /* Màu đỏ nếu lỗi */
+}
+
+/* Hiệu ứng trượt từ phải sang */
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* Hiệu ứng mờ dần đi */
+@keyframes fadeOut {
+    to { opacity: 0; visibility: hidden; }
+}

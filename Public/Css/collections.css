@@ -1,0 +1,79 @@
+/* --- Cấu hình Ô tìm kiếm --- */
+.search-wrapper {
+    width: 350px; /* Độ rộng cố định */
+    position: relative;
+}
+
+.search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+}
+
+.form-search {
+    padding-left: 38px !important; /* Chừa chỗ cho icon */
+    height: 38px; /* Chiều cao tiêu chuẩn */
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    font-size: 14px;
+}
+
+.form-search:focus {
+    border-color: #435ebe;
+    box-shadow: 0 0 0 3px rgba(67, 94, 190, 0.15);
+}
+
+/* --- Cấu hình Button (Nút bấm) --- */
+.btn {
+    height: 38px; /* Bắt buộc bằng chiều cao input */
+    padding: 0 16px;
+    font-weight: 500;
+    font-size: 14px;
+    border-radius: 6px;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.btn i { margin-right: 6px; }
+
+.btn:hover { 
+    opacity: 0.9; 
+    transform: translateY(-1px); 
+}
+
+/* --- Bảng màu --- */
+
+/* Màu Xanh Tím Than (Tìm & Thêm) */
+.btn-dark-blue {
+    background-color: #435ebe;
+    color: white;
+}
+
+/* Màu Xanh Lá (Xuất Excel) */
+.btn-green {
+    background-color: #198754;
+    color: white;
+}
+
+/* Màu Xanh Dương Tươi (Nhập Excel) */
+.btn-blue {
+    background-color: #0d6efd;
+    color: white;
+}
+
+/* Màu Xám Nhạt (Làm mới) */
+.btn-light-gray {
+    background-color: #f3f4f6;
+    color: #333;
+    border: 1px solid #e5e7eb;
+}

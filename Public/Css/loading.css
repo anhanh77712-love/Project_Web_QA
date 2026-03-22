@@ -1,0 +1,74 @@
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+
+.skeleton {
+    /* Màu nền cơ bản nhẹ nhàng hơn */
+    background: #eeeeee;
+    /* Gradient mượt hơn với độ tương phản thấp (trông sẽ sang hơn) */
+    background-image: linear-gradient(
+        90deg, 
+        #eeeeee 25%, 
+        #f5f5f5 50%, 
+        #eeeeee 75%
+    );
+    background-repeat: no-repeat;
+    /* Sử dụng background-size 200% để linh hoạt với mọi chiều rộng */
+    background-size: 200% 100%;
+    display: inline-block;
+    vertical-align: middle;
+    /* Tốc độ 1.5s giúp cảm giác dễ chịu hơn 1.2s */
+    animation: shimmer 1.5s infinite ease-in-out; 
+    border-radius: 4px;
+    border: none;
+}
+
+
+/* Tinh chỉnh các loại bộ xương */
+.skeleton-img { 
+    width: 50px; 
+    height: 50px; 
+}
+
+
+.skeleton-text { 
+    width: 100%; 
+    height: 0.8rem; 
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+
+.skeleton-title { 
+    width: 60%; 
+    height: 1.2rem; 
+    margin-bottom: 0.8rem;
+    display: block;
+}
+
+
+/* Hỗ trợ bo tròn */
+.skeleton.rounded-circle {
+    border-radius: 50% !important;
+}
+
+
+/* Hiệu ứng xuất hiện mượt mà cho nội dung thật */
+#actual-content {
+    animation: fadeIn 0.4s ease-out;
+}
+
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+
+

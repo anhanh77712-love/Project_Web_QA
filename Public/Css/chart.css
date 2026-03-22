@@ -1,0 +1,227 @@
+/* Google Font - Bạn nên thêm link này vào <head> của HTML */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+    --primary: #6366f1;
+    --primary-gradient: linear-gradient(180deg, #818cf8 0%, #6366f1 100%);
+    --success: #10b981;
+    --bg-main: #f8fafc;
+    --bg-card: #ffffff;
+    --text-dark: #1e293b;
+    --text-muted: #64748b;
+    --border-color: #f1f5f9;
+    --radius-lg: 16px;
+    --radius-md: 10px;
+}
+
+.analytics-container {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
+    max-width: 100%;
+    margin-bottom: 15px;
+
+}
+
+/* Header */
+.chart-header {
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--bg-main);
+}
+
+.header-title {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-icon {
+    background: var(--primary);
+    color: white;
+    padding: 8px;
+    border-radius: 8px;
+    display: flex;
+}
+
+/* Layout Wrapper */
+.analytics-wrapper {
+    display: flex;
+    gap: 30px;
+}
+
+.chart-section {
+    flex: 0 0 65%;
+    min-width: 0;
+}
+
+.list-section {
+    flex: 1;
+    min-width: 0;
+}
+
+.sub-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+    display: block;
+}
+
+/* Biểu đồ */
+.bar-chart {
+    display: flex;
+    align-items: flex-end;
+    height: 220px;
+    gap: 15px;
+    border-bottom: 2px solid var(--border-color);
+    padding: 0 10px 10px 10px;
+}
+
+.bar-item {
+    flex: 1;
+    text-align: center;
+    position: relative;
+}
+
+.bar {
+    background: var(--primary-gradient);
+    width: 80%;
+    max-width: 40px;
+    margin: 0 auto;
+    border-radius: 8px 8px 2px 2px;
+    position: relative;
+    transition: all 0.3s ease;
+    animation: growUp 1s ease-out;
+}
+
+.bar:hover {
+    transform: translateY(-5px);
+    filter: saturate(1.3);
+}
+
+.bar-value {
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.product-label-chart {
+    font-size: 11px;
+    color: var(--text-muted);
+    display: block;
+    margin-top: 15px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Danh sách sản phẩm */
+.product-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.product-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    background: var(--bg-main);
+    border-radius: var(--radius-md);
+    margin-bottom: 10px;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.product-item:hover {
+    background: #eff6ff;
+    transform: translateX(5px);
+}
+
+.rank-badge {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.rank-top { background: #fbbf24; color: white; }
+.rank-default { background: #e2e8f0; color: var(--text-muted); }
+
+.product-name-list {
+    font-weight: 500;
+    color: #334155;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.revenue-val {
+    color: var(--success);
+    font-weight: 700;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+/* Hiệu ứng */
+@keyframes growUp {
+    from { height: 0; opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Responsive */
+@media (max-width: 850px) {
+    .analytics-wrapper {
+        flex-direction: column;
+    }
+    .chart-section, .list-section {
+        flex: 0 0 100%;
+    }
+}
+
+
+
+.color-boxes {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-top: 15px;
+}
+.c-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    background: #f8fafc;
+    border-radius: 6px;
+    transition: 0.2s;
+}
+.c-card:hover { transform: translateY(-2px); background: #f1f5f9; }
+.c-swatch {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+}
+.p-bar {
+    transition: width 1s ease-in-out; /* Hiệu ứng chạy thanh tiến trình khi load */
+}

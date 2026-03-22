@@ -1,0 +1,221 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* Thêm đoạn này vào đầu file CSS để áp dụng cho toàn bộ */
+body, .profile, .main_info, .input_value, .label, .section_title {
+    font-family: 'Inter', sans-serif !important;
+}
+
+/* Sửa lại class này trong code của bạn */
+.main_info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    font-family: 'Inter', sans-serif; /* Đã đổi từ Lexend sang Inter */
+}
+.header_info {
+    display: flex;
+    /* Quan trọng: nowrap để ép nằm ngang, không cho xuống dòng */
+    flex-wrap: wrap; 
+    background-color: #1E293B;
+    border-radius: 10px;
+    padding: 15px 10px;
+    margin-top: 10px;
+    flex-direction: row;
+}
+.header_info,.section_box_1,.section_box_2 {
+    border-color: #E2E8F0;
+}
+
+.info_top {
+    /* Cho nội dung bên trái chiếm phần lớn không gian */
+    width: 60%;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    padding-left: 20px;
+}
+
+.info_img {
+    /* Cố định khối chứa ảnh bên phải */
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.info_img img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* Các phần bổ trợ */
+.user_section {
+    margin-bottom: 10px;
+}
+.header_info .coolcash_section {
+    margin-bottom: 10px; /* Giảm margin để cân đối với flex */
+
+}
+
+/* Container chính */
+.main_info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    font-family: 'Lexend', sans-serif; /* Hoặc font bạn đang dùng */
+}
+
+.section_box_1 {
+    flex: 1 1 55%;
+    min-width: 300px;
+    background-color: #1E293B;
+    border-radius: 12px;
+    padding: 30px 20px;
+    margin-top: 15px;
+}
+
+.section_box_2 {
+    flex: 1 1 35%;
+    min-width: 280px;
+    background-color: #1E293B;
+    border-radius: 12px;
+    padding: 30px 20px;
+    margin-top: 15px;
+}
+
+.section_title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 25px;
+    color: #0F172A;
+}
+
+/* Cấu trúc Grid cho Item */
+.info_grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.info_item {
+    display: grid;
+    grid-template-columns: 140px 1fr; /* Cố định độ rộng nhãn để thẳng hàng */
+    align-items: center;
+    padding: 5px 0;
+}
+
+.label {
+    font-size: 15px;
+    color: #666;
+    font-weight: 400;
+}
+
+/* Style cho Input để giống hình mẫu */
+.input_value {
+    border: 1px solid transparent; /* Ẩn viền mặc định */
+    background: transparent;
+    padding: 8px 12px;
+    font-size: 16px;
+    color: #333;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    width: 100%;
+    outline: none;
+}
+
+/* Khi người dùng nhấn vào để sửa */
+.input_value:focus, .input_value:hover {
+    border-color: #e0e0e0;
+    background-color: #fafafa;
+}
+
+/* Riêng input email để readonly */
+.input_value[readonly] {
+    color: #888;
+    cursor: not-allowed;
+}
+
+/* Nút bấm cập nhật */
+.btn_update, .btn_chagepass {
+    background-color: #FFFFFF;
+    border: 1.5px solid #000;
+    color: #000;
+    padding: 12px 35px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn_update:hover, .btn_chagepass:hover {
+    background-color: #000;
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+/* Responsive cho mobile */
+@media (max-width: 768px) {
+    .section_box_1, .section_box_2 {
+        flex: 1 1 100%;
+    }
+    .info_item {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+    .input_value {
+        padding: 8px 0;
+    }
+}
+
+#updateUserModal .modal-content ,#changePasswordModal .modal-content {
+    border-radius: 0.5rem !important;
+    overflow: hidden; /* Đảm bảo các góc bo không bị phần tử con che mất */
+    border: none;
+}
+
+/* Bo góc cho cả phần ảnh đại diện bên trái nếu cần */
+#updateUserModal .avatar_img,#changePasswordModal .avatar_img {
+    border-bottom-left-radius: 0.5rem;
+}
+/* Định vị icon mắt trong các ô input mật khẩu */
+.password-toggle-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #999;
+    z-index: 5;
+    transition: color 0.2s;
+}
+
+.password-toggle-icon:hover {
+    color: #2f5acf;
+}
+
+/* Đảm bảo ô input có đủ khoảng trống bên phải để text không đè lên icon */
+.form-control.pe-5 {
+    padding-right: 40px !important;
+    height: 45px; /* Tăng độ cao cho chuyên nghiệp */
+    border-radius: 5px;
+}
+/* Ẩn icon mắt mặc định của trình duyệt Edge/Chrome */
+input::-ms-reveal,
+input::-ms-clear {
+    display: none;
+}
+
+/* Ẩn icon mắt mặc định trên một số phiên bản Chrome cũ hoặc tùy biến */
+input::-webkit-contacts-auto-fill-button, 
+input::-webkit-credentials-auto-fill-button {
+    visibility: hidden;
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+}

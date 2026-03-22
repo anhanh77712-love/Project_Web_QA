@@ -1,0 +1,368 @@
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(4px);
+}
+
+.modal_content {
+    background: #fff;
+    width: 90%;
+    max-width: 550px;
+    margin: 2% auto;
+    border-radius: 24px;
+    padding: 30px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+.header_info{
+    background-color: #737373;
+}
+
+/* Avatar Update */
+.avatar_wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+}
+.avatar_preview_container {
+    position: relative;
+    width: 110px;
+    height: 110px;
+    margin: 0 auto;
+}
+.avatar_preview_container img {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #f0f0f0;
+}
+.camera_badge {
+    position: absolute;
+    bottom: 5px; right: 5px;
+    background: #000;
+    color: #fff;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+}
+
+/* Fieldset Input Style */
+.input_fieldset {
+    border: 1px solid #ccc;
+    border-radius: 25px;
+    padding: 5px 15px;
+    margin-bottom: 15px;
+}
+.input_fieldset legend {
+    font-size: 12px;
+    color: #666;
+    padding: 0 10px;
+    margin-left: 20px;
+}
+.input_row {
+    display: flex;
+    align-items: center;
+}
+.input_row input {
+    border: none; outline: none;
+    padding: 10px; width: 100%;
+    font-size: 16px; font-weight: 500;
+}
+
+/* Slider Style */
+.slider_container { margin-bottom: 20px; }
+.slider_header { display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 8px; }
+.v_blue { color: #335eea; }
+.range_slider {
+    width: 100%;
+    accent-color: #335eea; /* Màu xanh như hình mẫu */
+}
+
+.btn_submit_update {
+    width: 100%;
+    background: #000;
+    color: #fff;
+    border: none;
+    padding: 16px;
+    border-radius: 30px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+.btn-close{
+    position: absolute;
+    top: 15px; right: 20px;
+    font-size: 24px;
+    color: #666;
+    cursor: pointer;
+}
+
+
+
+/* Container Modal chính */
+#updateUserModal .modal-content {
+    border-radius: 25px;
+    overflow: hidden;
+    border: none;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.15);
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Header của Modal */
+#updateUserModal .modal-header {
+    background-color: #ffffff;
+    padding: 25px 30px 10px 30px;
+}
+
+#updateUserModal .modal-title {
+    font-size: 1.4rem;
+    color: #333;
+    letter-spacing: -0.5px;
+}
+/* Khối bên trái: Avatar */
+.avatar_img {
+    background-color: #ffffff;
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column; /* Xếp theo chiều dọc */
+    align-items: center;    /* Căn giữa ngang */
+    justify-content: center; /* Căn giữa dọc */
+    border-right: none !important; /* BỎ DẤU GẠCH NGANG */
+}
+
+.avatar_img .avatar-preview-container {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 15px;
+}
+
+.avatar_img #previewAvatar {
+    object-fit: cover;
+    background: #ffffff;
+    border: 4px solid #fff;
+    border-radius: 50%; /* Đảm bảo ảnh luôn tròn */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease;
+}
+
+.avatar_img .upload-label {
+    position: absolute;
+    /* Căn icon máy ảnh sát góc phải dưới của ảnh tròn */
+    bottom: 5px; 
+    right: 5px;
+    background-color: #212529;
+    color: #ffffff;
+    width: 38px; /* Thu nhỏ lại một chút cho tinh tế */
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: 3px solid #ffffff; /* Viền trắng để tách biệt với ảnh */
+    z-index: 10;
+    transition: all 0.2s ease;
+}
+
+.avatar_img .upload-label:hover {
+    background-color: #000;
+    transform: scale(1.1);
+}
+
+
+/* Khối bên phải: Info User */
+.info_user {
+    padding-left: 40px !important;
+}
+
+.info_user .form-label {
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    color: #6c757d;
+    margin-bottom: 5px;
+}
+
+.info_user .form-control, 
+.info_user .form-select {
+    background-color: #f5f6f8;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    padding: 10px 15px;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.info_user .form-control:focus, 
+.info_user .form-select:focus {
+    background-color: #ffffff;
+    border-color: #212529;
+    box-shadow: none;
+    outline: 0;
+}
+
+/* Section địa chỉ */
+.info_user .section-title {
+    font-size: 0.85rem;
+    color: #212529;
+    margin-top: 25px;
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #eee;
+}
+
+.info_user .mini-label {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #adb5bd;
+}
+
+/* Nút bấm Lưu */
+.btn-save-change {
+    background-color: #212529;
+    color: #fff;
+    border-radius: 50px;
+    padding: 14px 40px;
+    font-size: 1rem;
+    letter-spacing: 1px;
+    border: none;
+    transition: all 0.3s ease;
+    width: 100%;
+    max-width: 300px;
+}
+
+.btn-save-change:hover {
+    background-color: #000;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    transform: translateY(-2px);
+}
+
+/* Responsive cho mobile */
+@media (max-width: 768px) {
+    .avatar_img {
+        border-right: none !important;
+        border-bottom: 1px solid #eee;
+    }
+}
+/* Khung Modal */
+#changePasswordModal .modal-content {
+    border-radius: 30px !important; /* Bo góc cực đại như ảnh */
+    border: none !important;
+    position: relative;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.15) !important;
+}
+
+/* Nút X đóng góc phải */
+.custom-close-btn {
+    position: absolute;
+    top: 25px;
+    right: 25px;
+    z-index: 10;
+}
+
+/* Label: Chữ in hoa, nhỏ, xám */
+.custom-form-container .form-label {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: #999 !important;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+    display: block;
+}
+
+/* Input: Nền xám nhạt, bo góc lớn, không viền */
+.custom-form-container .form-control {
+    background-color: #f7f8fa !important;
+    border: none !important;
+    border-radius: 15px !important;
+    padding: 14px 20px !important;
+    font-size: 15px;
+}
+
+.custom-form-container .form-control:focus {
+    background-color: #f1f2f4 !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* Nút Lưu thay đổi: Đen tròn kiểu Pill-shape */
+.btn-save-custom {
+    background-color: #1a1d20;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 16px 0;
+    font-weight: 700;
+    font-size: 15px;
+    text-transform: uppercase;
+    width: 85%; /* Độ dài nút */
+    transition: all 0.3s ease;
+}
+
+.btn-save-custom:hover {
+    background-color: #000;
+    transform: translateY(-2px);
+}
+
+/* Thiết lập màu nền cho Header Info */
+.header_info {
+    background-color: #f5f5f5;
+    color: #000000; /* Chữ đen để nổi bật trên nền trắng */
+    padding: 20px;
+    border-radius: 15px; /* Bo góc cho đồng bộ với modal */
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+/* Thiết lập màu nền cho Section Box 1 & 2 */
+.section_box_1, 
+.section_box_2 {
+    background-color: #f5f5f5;
+    padding: 25px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    color: #ffffff; /* Chữ trắng */
+}
+
+/* Tùy chỉnh tiêu đề bên trong các box */
+.section_box_1 .section_title, 
+.section_box_2 .section_title {
+    color: #000;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+/* Tùy chỉnh các Label để dễ đọc hơn trên nền xám */
+.section_box_1 .label, 
+.section_box_2 .label {
+    color: #000;
+    font-weight: 500;
+}
+
+/* Tùy chỉnh Input bên trong các box xám */
+.section_box_1 .input_value, 
+.section_box_2 .input_value {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #000;
+    border-radius: 8px;
+    padding: 8px 12px;
+}
+
+/* Khi input được readonly (như Email) */
+.section_box_1 .input_value[readonly], 
+.section_box_2 .input_value[readonly] {
+    background-color: rgba(0, 0, 0, 0.1);
+    cursor: not-allowed;
+}
+

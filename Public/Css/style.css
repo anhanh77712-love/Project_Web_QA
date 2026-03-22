@@ -1,0 +1,312 @@
+/* --- 1. FONTS & CƠ BẢN --- */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+body {
+    font-family: "Montserrat", sans-serif;
+    background-color: #ffffff;
+    margin: 0;
+}
+
+a {
+    text-decoration: none !important;
+    transition: 0.3s;
+}
+.top__bar{
+    color: #fff;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+.top__bar a{
+     color: #fff;
+    transition: 0.2s;
+}
+
+
+/* --- 2. NAVBAR LAYOUT --- */
+.navbar {
+    background-color: #ffffff !important;
+    border-bottom: 1px solid #f0f0f0;
+    padding: 12px 0 !important;
+}
+
+
+/* Thiết lập cho thẻ chứa link */
+.nav-link {
+    position: relative; /* Bắt buộc để làm mốc cho đường kẻ ::after */
+    display: inline-block;
+    padding-bottom: 5px; /* Tạo khoảng cách giữa chữ và đường kẻ */
+    text-decoration: none !important;
+    transition: color 0.3s ease;
+      font-weight: 700;
+    font-size: 13px !important;
+    text-transform: uppercase;
+    color: #000 !important;
+    padding: 0 15px !important;
+}
+
+/* 2. Tạo đường kẻ */
+.nav-link::after {
+    content: "";
+    position: absolute;
+    bottom: 1px;           /* Khoảng cách đường kẻ so với chữ */
+    left: 50%;             /* Đặt mốc ở giữa chữ */
+    width: 0;              /* Ban đầu chiều rộng bằng 0 */
+    height: 2px;
+    background-color: #000;
+    transition: all 0.4s ease;
+    transform: translateX(-50%); /* Dịch trái 50% chiều rộng chính nó để luôn cân giữa */
+}
+
+/* 3. Hiệu ứng hover */
+.nav-link:hover::after {
+    /* Để đường kẻ ngắn hơn vùng click nhưng dài hơn chữ 1 xíu, 
+       bạn có thể dùng giá trị % (ví dụ 70%) hoặc dùng hàm calc để bù trừ.
+    */
+    width: 80%; /* Điều chỉnh con số này (70%, 80%, 90%) để ngắn/dài theo ý muốn */
+}
+
+
+/* Riêng cho mục SALE nếu bạn muốn đường kẻ màu đỏ */
+.nav-item a.text-danger::after {
+    background-color: #ff0000;
+}
+/* Badge SALE lơ lửng */
+.sale-badge-percent {
+    position: absolute;
+    top: -10px;
+    right: 5px;
+    font-size: 10px;
+    color: #ff0000;
+    font-weight: 800;
+}
+
+/* --- 3. CỤM BÊN PHẢI (SEARCH, AUTH, CART) --- */
+.nav-right-zone {
+    display: flex;
+    align-items: center;
+    gap: 20px; 
+}
+
+/* Thanh tìm kiếm bo tròn chuẩn */
+.search-coolmate {
+    background-color: #f1f1f1;
+    border-radius: 25px;
+    padding: 6px 16px;
+    display: flex;
+    align-items: center;
+    width: 220px;
+    border: 1px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.search-coolmate:focus-within {
+    background-color: #fff;
+    border-color: #2f5acf;
+    box-shadow: 0 0 0 4px rgba(47, 90, 207, 0.1);
+}
+
+.search-coolmate input {
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 14px;
+    width: 100%;
+    font-weight: 500;
+}
+
+.search-coolmate button {
+    border: none;
+    background: none;
+    color: #666;
+    padding: 0;
+    cursor: pointer;
+}
+
+/* --- SỬA LỖI ĐỔI MÀU ĐĂNG NHẬP / ĐĂNG KÝ --- */
+.user-auth-area {
+    display: flex;
+    align-items: center;
+}
+
+/* Gộp chung btnok và auth-link để kiểm soát màu sắc tuyệt đối */
+.btnok, .auth-link {
+    color: #000 !important; /* Cố định màu đen */
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none !important;
+    white-space: nowrap;
+    transition: color 0.2s ease;
+}
+
+.btnok:hover, .auth-link:hover {
+    color: #2f5acf !important; /* Chỉ đổi màu khi di chuột trực tiếp vào nút */
+}
+
+.auth-divider {
+    margin: 0 8px;
+    color: #ccc;
+    font-weight: 400;
+}
+
+/* Khi đã đăng nhập (User + Tên) */
+.user-logged-link {
+    display: flex;
+    align-items: center;
+    color: #000 !important;
+    font-weight: 700;
+    gap: 8px;
+    text-decoration: none !important;
+}
+
+.user-name-text {
+    font-size: 14px;
+    max-width: 120px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Giỏ hàng & Badge nhỏ lơ lửng */
+.cart-wrapper {
+    display: flex;
+    align-items: center;
+}
+
+.cart-icon-btn {
+    font-size: 22px; 
+    color: #000;
+    position: relative; /* Quan trọng để badge bám theo */
+    display: flex;
+    align-items: center;
+}
+
+.cart-badge-new {
+    position: absolute;
+    top: -6px;
+    right: -10px;
+    background-color: #ff0000;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #fff;
+    line-height: 1;
+}
+
+.cart-icon-btn:hover {
+    color: #2f5acf;
+}
+
+/* --- 4. MEGA MENU --- */
+.nav-item.has-mega-menu { position: static; }
+
+.mega-menu {
+    position: absolute;
+    left: 0;
+    right: 0;
+    width: 100%;
+    background: #fff;
+    border-top: 1px solid #f0f0f0;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.05);
+    padding: 40px 0 0 0; /* Để trống bottom cho footer */
+    display: block;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.nav-item.has-mega-menu:hover .mega-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Tiêu đề & List trong Mega Menu */
+.mega-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #000 !important;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.mega-title i { margin-left: 8px; color: #2f5acf; font-size: 12px; }
+
+.mega-list { list-style: none; padding: 0; }
+.mega-list li { margin-bottom: 10px; }
+.mega-list li a { color: #555 !important; font-size: 14.5px; }
+.mega-list li a:hover { color: #000 !important; }
+
+/* Mega Menu Footer */
+.mega-menu-footer {
+    background-color: #f5f5f5;
+    padding: 20px 0;
+    margin-top: 30px;
+    border-top: 1px solid #eee;
+}
+
+.footer-label {
+    font-size: 13px;
+    color: #888;
+    margin-right: 20px;
+    padding-right: 20px;
+    border-right: 1px solid #ddd;
+}
+
+.footer-links a {
+    font-size: 14px;
+    font-weight: 700;
+    color: #000 !important;
+    margin-right: 25px;
+    text-transform: uppercase;
+}
+
+/* Phụ trợ */
+.no-caret::after { display: none !important; }
+.dropdown-menu { border-radius: 8px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+.text-primary { color: #2f5acf !important; }
+.view-all { font-size: 12px; font-weight: 700; color: #2f5acf !important; }
+
+/* Bo góc cho toàn bộ modal content */
+.modal-content {
+    border-radius: 0.5rem !important;
+    overflow: hidden;
+}
+
+/* Ẩn mắt mặc định của trình duyệt nhân Chromium (Edge/Chrome) */
+input::-ms-reveal,
+input::-ms-clear {
+    display: none;
+}
+
+/* Định vị icon mắt thủ công */
+.password-toggle-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #999;
+    z-index: 10;
+    padding: 5px;
+}
+
+.password-toggle-icon:hover {
+    color: #2f5acf;
+}
+
+/* Đảm bảo text không đè lên icon */
+.form-control.pe-5 {
+    padding-right: 45px !important;
+}

@@ -1,0 +1,240 @@
+/* ==========================================================================
+   MODAL TẠO VOUCHER (Custom Style)
+   ========================================================================== */
+
+/* 1. Khung Modal */
+.custom-modal-style .modal-content {
+    border: none;
+    border-radius: 16px; /* Bo góc lớn hơn cho hiện đại */
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+/* 2. Header Modal */
+.custom-modal-style .modal-header {
+    background-color: #f8fafc; /* Màu nền xám rất nhạt */
+    border-bottom: 1px solid #f1f5f9;
+    padding: 20px 24px;
+}
+
+.custom-modal-style .modal-title {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 1.15rem;
+}
+
+.custom-modal-style .btn-close {
+    background-size: 0.8em;
+    padding: 0.8rem;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+
+.custom-modal-style .btn-close:hover {
+    background-color: #e2e8f0;
+}
+
+/* 3. Body Modal */
+.custom-modal-style .modal-body {
+    padding: 24px;
+    background-color: #ffffff;
+}
+
+/* 4. Form Labels (Nhãn) */
+.custom-modal-style .form-label {
+    font-size: 0.875rem; /* 14px */
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 6px;
+}
+
+/* 5. Inputs & Selects */
+.custom-modal-style .form-control,
+.custom-modal-style .form-select {
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.95rem;
+    color: #1e293b;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Hiệu ứng khi click vào input */
+.custom-modal-style .form-control:focus,
+.custom-modal-style .form-select:focus {
+    border-color: #4f46e5; /* Màu tím chủ đạo */
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); /* Viền sáng mờ */
+    background-color: #fff;
+}
+
+/* Input Code tự động viết hoa */
+.custom-modal-style .uppercase-input {
+    text-transform: uppercase;
+    font-family: 'Consolas', monospace; /* Font kiểu code cho dễ nhìn */
+    font-weight: 700;
+    color: #4f46e5;
+    letter-spacing: 1px;
+}
+
+/* Placeholder style */
+.custom-modal-style ::placeholder {
+    color: #94a3b8;
+    font-size: 0.9rem;
+}
+
+/* 6. Textarea (Mô tả) */
+.custom-modal-style textarea.form-control {
+    resize: none; /* Không cho kéo giãn lung tung */
+}
+
+/* 7. Đường kẻ phân cách */
+.custom-modal-style hr {
+    margin: 24px 0;
+    border-color: #f1f5f9;
+    opacity: 1;
+}
+
+/* 8. Ghi chú nhỏ (Small text) */
+.custom-modal-style .text-muted {
+    font-size: 0.8rem;
+    color: #94a3b8 !important;
+}
+
+/* 9. Nút Lưu (Submit Button) */
+.custom-modal-style .btn-primary {
+    background-color: #4f46e5;
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
+    transition: all 0.25s;
+}
+
+.custom-modal-style .btn-primary:hover {
+    background-color: #4338ca;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4);
+}
+
+.custom-modal-style .btn-primary:active {
+    transform: translateY(0);
+}
+/* Container chính */
+.toolbar-container {
+    background: transparent; /* Hoặc #fff nếu muốn nền trắng */
+    padding-bottom: 20px; /* Khoảng cách với bảng bên dưới */
+}
+
+/* Ô tìm kiếm */
+.search-wrapper {
+    position: relative;
+    width: 350px; /* Chiều dài cố định như ảnh */
+}
+
+.search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #888;
+    font-size: 14px;
+    z-index: 2;
+}
+
+.form-search {
+    padding-left: 35px !important;
+    height: 38px;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+/* Cấu hình chung cho nút */
+.btn {
+    height: 38px; /* Bằng chiều cao input */
+    padding: 0 16px;
+    font-weight: 500;
+    font-size: 14px;
+    border-radius: 6px;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+.btn i { margin-right: 6px; }
+.btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+/* --- MÀU SẮC CHUẨN ẢNH --- */
+
+/* 1. Màu xanh tím than (Nút Tìm & Thêm) */
+.btn-dark-blue {
+    background-color: #435ebe;
+    color: white;
+}
+
+/* 2. Màu xám nhạt (Nút Làm mới) */
+.btn-light-gray {
+    background-color: #f3f4f6;
+    color: #333;
+    border: 1px solid #e5e7eb;
+}
+
+/* 3. Màu xanh lá (Nút Xuất Excel) */
+.btn-green {
+    background-color: #198754;
+    color: white;
+}
+
+/* 4. Màu xanh dương tươi (Nút Nhập Excel) */
+.btn-blue {
+    background-color: #0d6efd;
+    color: white;
+}
+.btn-expand {
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.btn-expand:hover {
+    color: #0d6efd;
+    background: #f0f0f0;
+    border-radius: 4px;
+}
+
+.btn-expand i {
+    transition: transform 0.3s ease;
+}
+
+.btn-expand.expanded i {
+    transform: rotate(90deg);
+}
+
+.variants-container {
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
