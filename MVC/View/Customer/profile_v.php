@@ -322,3 +322,33 @@ $user = $data['user_info'] ?? null;
         to { opacity: 0; visibility: hidden; }
     }
 </style>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<?php if(isset($_SESSION['success'])): ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'success',
+                title: 'Thành công',
+                text: '<?= $_SESSION['success'] ?>',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        });
+    </script>
+    <?php unset($_SESSION['success']); ?>
+<?php endif; ?>
+
+<?php if(isset($_SESSION['error'])): ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'Thất bại',
+                text: '<?= $_SESSION['error'] ?>'
+            });
+        });
+    </script>
+    <?php unset($_SESSION['error']); ?>
+<?php endif; ?>

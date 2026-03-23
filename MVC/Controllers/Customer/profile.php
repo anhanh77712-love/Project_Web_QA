@@ -118,6 +118,86 @@ class profile extends controllers_customer {
         header('Location: /web_qlsp/profile');
         exit;
     }
+    // public function update() {
+    //     if (!isset($_SESSION['user_id'])) {
+    //         header('Location: /web_qlsp/home');
+    //         exit;
+    //     }
+
+    //     if ($_SERVER['REQUEST_METHOD'] != 'POST') {
+    //         header('Location: /web_qlsp/profile');
+    //         exit;
+    //     }
+
+    //     $user_id = $_SESSION['user_id'];
+
+    //     $full_name      = trim($_POST['full_name'] ?? '');
+    //     $phone          = trim($_POST['phone'] ?? '');
+    //     $province_code  = trim($_POST['province_code'] ?? '');
+    //     $district_code  = trim($_POST['district_code'] ?? '');
+    //     $ward_code      = trim($_POST['ward_code'] ?? '');
+    //     $address_detail = trim($_POST['address_detail'] ?? '');
+
+    //     if ($full_name === '' || $phone === '' || $province_code === '' || $district_code === '' || $ward_code === '' || $address_detail === '') {
+    //         $_SESSION['error'] = 'Vui lòng nhập đầy đủ thông tin địa chỉ và số điện thoại.';
+    //         header('Location: /web_qlsp/profile');
+    //         exit;
+    //     }
+
+    //     // --- BẮT ĐẦU XỬ LÝ ẢNH ---
+    //     $avatar = ''; 
+
+    //     // 1. Lấy thông tin user hiện tại (để lấy ảnh cũ làm mặc định)
+    //     $current_user = $this->profile_model->user_getById($user_id);
+    //     if ($current_user) {
+    //         $avatar = isset($current_user['avatar']) ? $current_user['avatar'] : '';
+    //     }
+
+    //     // 2. Kiểm tra xem có upload ảnh mới không
+    //     if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] == 0) {
+    //         // SỬ DỤNG __DIR__ ĐỂ LẤY ĐƯỜNG DẪN TƯƠNG ĐỐI TỪ FILE CONTROLLER (Chuẩn và ít lỗi nhất)
+    //         // Vì thư mục hiện tại là MVC/Controllers/Customer, ta lùi lại 3 cấp để về thư mục gốc
+    //         $target_dir = dirname(dirname(__DIR__)) . "/Public/Picture/users/";
+            
+    //         // Nếu thư mục chưa tồn tại thì tạo mới
+    //         if (!file_exists($target_dir)) {
+    //             mkdir($target_dir, 0777, true);
+    //         }
+
+    //         $file_extension = pathinfo($_FILES["avatar"]["name"], PATHINFO_EXTENSION);
+    //         $file_name = 'user_' . $user_id . '_' . time() . '.' . $file_extension; 
+    //         $target_file = $target_dir . $file_name;
+            
+    //         if (move_uploaded_file($_FILES["avatar"]["tmp_name"], $target_file)) {
+    //             $avatar = $file_name; // Cập nhật tên ảnh mới nếu upload thành công
+    //         }
+    //     } 
+    //     // --- KẾT THÚC XỬ LÝ ẢNH ---
+
+    //     // Gọi hàm update trong Model
+    //     $ok = $this->profile_model->user_updateProfile(
+    //         $user_id,
+    //         $full_name,
+    //         $phone,
+    //         $province_code,
+    //         $district_code,
+    //         $ward_code,
+    //         $address_detail,
+    //         $avatar 
+    //     );
+
+    //     // Lưu thông báo vào Session
+    //     if ($ok) {
+    //         $_SESSION['user_name'] = $full_name;
+    //         $_SESSION['success'] = 'Cập nhật hồ sơ thành công!';
+    //     } else {
+    //         $_SESSION['error'] = 'Có lỗi xảy ra, cập nhật thất bại!';
+    //     }
+
+    //     // Chuyển hướng về trang profile
+    //     header('Location: /web_qlsp/profile');
+    //     exit;
+    // }
 
     function change_password() {
         if (!isset($_SESSION['user_id'])) {

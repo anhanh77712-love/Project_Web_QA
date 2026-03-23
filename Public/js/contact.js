@@ -1,11 +1,19 @@
-document.addEventListener('DOMContentLoaded', function() {
-    var contactWrapper = document.getElementById('contactWrapper');
-    var toggleBtn = document.getElementById('toggleBtn');
-    if (toggleBtn && contactWrapper) {
-        toggleBtn.addEventListener('click', function() {
-            contactWrapper.classList.toggle('active');
-        });
-    }
+document.addEventListener('DOMContentLoaded', () => {
+    const wrapper = document.getElementById('contactWrapper');
+    const toggleBtn = document.getElementById('toggleBtn');
+
+    // 1. Bật/tắt menu khi click vào nút chính
+    toggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); 
+        wrapper.classList.toggle('active');
+    });
+
+    // 2. Tự động đóng menu nếu người dùng bấm ra ngoài khoảng trống
+    document.addEventListener('click', (e) => {
+        if (!wrapper.contains(e.target) && wrapper.classList.contains('active')) {
+            wrapper.classList.remove('active');
+        }
+    });
 });
 
 function showLoginAlert() {

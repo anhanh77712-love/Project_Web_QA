@@ -50,6 +50,7 @@ class profile_m extends connectDB {
 		$updateSql = "UPDATE users SET password = '$new_password' WHERE id = '$user_id'";
 		return mysqli_query($this->con, $updateSql);
 	}
+	
 	// Thêm vào trong file MVC/Models/profile_m.php
 public function get_user_info($user_id)
 {
@@ -58,5 +59,6 @@ public function get_user_info($user_id)
     $sql = "SELECT * FROM users WHERE id = '$user_id' LIMIT 1";
     return mysqli_query($this->con, $sql);
 }
+
 }
 ?>

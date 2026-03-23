@@ -71,5 +71,14 @@ class users_m extends connectDB {
         $result = mysqli_query($this->con, $sql);
         return mysqli_fetch_assoc($result);
     }
-    
+    // Thêm hàm này vào file users_m.php (bên dưới các hàm đã có)
+    public function users_getOrderHistory($user_id) {
+        $user_id = mysqli_real_escape_string($this->con, $user_id);
+        // Lấy các thông tin cơ bản của đơn hàng
+        $sql = "SELECT id, total_money, payment_method, status, created_at 
+                FROM orders 
+                WHERE user_id = '$user_id' 
+                ORDER BY created_at DESC";
+        return mysqli_query($this->con, $sql);
+    }
 }

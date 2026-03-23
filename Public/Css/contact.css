@@ -1,111 +1,135 @@
 /* ============================================================
-   FLOATING CONTACT BUTTON - STYLE CHUẨN COOLMATE
+   FLOATING CONTACT BUTTON - CUSTOM FOR YOUR HTML
    ============================================================ */
 
-/* 1. Container chính */
+/* Container chính */
 .contact-container {
     position: fixed;
     bottom: 30px;
     right: 30px;
     display: flex;
-    flex-direction: column-reverse; /* Đẩy các nút phụ lên trên nút chính */
+    flex-direction: column-reverse; /* Xếp từ dưới lên */
     gap: 15px;
     align-items: center;
     z-index: 9999;
 }
 
-/* 2. Style chung cho các vòng tròn icon */
+/* Style chung cho các nút */
 .contact__item {
-    width: 55px;
-    height: 55px;
-    background-color: #cbd5e0;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     text-decoration: none !important;
-    color: #333 !important;
-    position: relative; /* Để làm gốc cho tooltip SĐT */
+    color: #ffffff !important;
+    font-size: 20px;
+    font-weight: bold;
+    position: relative; /* Gốc cho tooltip */
+    /* Hiệu ứng nảy (Bouncy) siêu mượt */
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
-/* 3. Trạng thái ẩn mặc định cho Zalo và Phone */
-.item-phone, .item-zalo {
+/* Nút Main to hơn một chút */
+.main-btn {
+    width: 60px;
+    height: 60px;
+    background-color: #FF5A5F;
+    font-size: 24px;
+    z-index: 10;
+    animation: pulse-glow 2s infinite; /* Hiệu ứng tỏa sáng */
+}
+
+/* Trạng thái ẩn mặc định cho Zalo và Phone */
+.contact__item:not(.main-btn) {
     opacity: 0;
-    transform: translateY(30px) scale(0);
+    transform: translateY(40px) scale(0.5);
     pointer-events: none;
+    position: absolute;
+    bottom: 10px;
 }
 
-/* 4. Hiệu ứng hiển thị số điện thoại khi Hover vào icon Phone */
-.item-phone::after {
-    content: attr(data-phone); /* Lấy SĐT từ thuộc tính data-phone trong HTML */
+/* Màu sắc riêng */
+.item-zalo  { background-color: #0068FF; font-size: 14px; font-family: Arial, sans-serif;}
+.item-phone { background-color: #00B14F; }
+
+/* ============================================================
+   TOOLTIP (Nhãn dán hiển thị khi hover)
+   ============================================================ */
+.item-phone::after,
+.item-zalo::after {
     position: absolute;
-    right: 70px; /* Hiển thị sang bên trái của icon */
-    background-color: #333;
-    color: #fff;
-    padding: 6px 15px;
+    right: 65px; /* Nằm bên trái nút */
+    background-color: #333333;
+    color: #ffffff;
+    padding: 6px 14px;
     border-radius: 20px;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
+    font-family: Arial, sans-serif;
     white-space: nowrap;
     opacity: 0;
     visibility: hidden;
+    transform: translateX(10px); /* Lùi lại để tạo hiệu ứng trượt */
     transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
-.item-phone:hover::after {
+/* Lấy SĐT từ data-phone của bạn */
+.item-phone::after { content: attr(data-phone); }
+/* Tự thêm chữ cho Zalo vì HTML không có data attribute */
+.item-zalo::after { content: "Chat Zalo"; }
+
+.contact__item:hover::after {
     opacity: 1;
     visibility: visible;
-    right: 65px; /* Hiệu ứng trượt nhẹ khi hiện */
+    transform: translateX(0); /* Trượt vào vị trí */
 }
 
-/* 5. Cấu trúc Icon Tin nhắn và X */
-.icon-close {
-    display: none;
-    font-size: 20px;
-    font-weight: 800;
-    font-family: Arial, sans-serif;
+/* Cấu trúc thẻ span X của bạn */
+.icon-close { 
+    display: none; 
+    font-family: Arial, sans-serif; 
+    font-size: 24px; 
 }
 
-/* 6. TRẠNG THÁI KHI CLICK (Class .active) */
+/* ============================================================
+   TRẠNG THÁI ACTIVE (KHI CLICK MỞ MENU)
+   ============================================================ */
 
-/* Hiện các nút Zalo và Phone vọt lên */
-.contact-container.active .item-phone,
-.contact-container.active .item-zalo {
+/* Hiện các nút phụ vọt lên */
+.contact-container.active .contact__item:not(.main-btn) {
     opacity: 1;
     transform: translateY(0) scale(1);
     pointer-events: auto;
+    position: relative;
+    bottom: 0;
 }
 
-/* Đổi icon Tin nhắn -> X */
-.contact-container.active .icon-msg {
-    display: none;
-}
-.contact-container.active .icon-close {
-    display: block;
-}
+/* Thứ tự bung ra (Delay) */
+.contact-container.active .item-phone { transition-delay: 0.05s; }
+.contact-container.active .item-zalo  { transition-delay: 0.1s; }
 
-/* Thay đổi màu sắc khi mở menu */
+/* Thay đổi nút Main khi mở */
 .contact-container.active .main-btn {
-    background-color: #2d3748;
-    color: white !important;
-    transform: rotate(90deg); /* Xoay nhẹ để tạo hiệu ứng chuyển động */
+    background-color: #333333;
+    transform: rotate(90deg); /* Xoay nhẹ */
+    animation: none; /* Tắt hiệu ứng tỏa sáng */
 }
 
-.contact-container.active .item-zalo {
-    background-color: #0068ff;
-    color: white !important;
-}
+.contact-container.active .icon-msg { display: none; }
+.contact-container.active .icon-close { display: block; }
 
-.contact-container.active .item-phone {
-    background-color: #48bb78;
-    color: white !important;
-}
+/* Hiệu ứng hover cho nút */
+.contact__item:hover { transform: scale(1.1); }
+.contact-container.active .main-btn:hover { transform: rotate(90deg) scale(1.1); }
 
-/* Tăng hiệu ứng hover cho từng nút */
-.contact__item:hover {
-    transform: scale(1.1);
+/* Hiệu ứng tỏa sáng cho nút Main */
+@keyframes pulse-glow {
+    0% { box-shadow: 0 0 0 0 rgba(255, 90, 95, 0.7); }
+    70% { box-shadow: 0 0 0 15px rgba(255, 90, 95, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 90, 95, 0); }
 }

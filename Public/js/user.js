@@ -65,3 +65,6 @@ document.querySelectorAll('.btn-detail').forEach(btn => {
         }
     });
 });
+
+
+

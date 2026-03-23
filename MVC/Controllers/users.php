@@ -21,6 +21,88 @@ class users extends controllers {
         ]);
     }
 
+    // Thêm hàm này vào class users trong file users.php
+    function get_order_history($id) {
+        $orders = $this->user->users_getOrderHistory($id);
+        $data = [];
+        
+        if ($orders && mysqli_num_rows($orders) > 0) {
+            while ($row = mysqli_fetch_assoc($orders)) {
+                // Format lại dữ liệu cho đẹp trước khi gửi về client
+                $row['created_at_format'] = date('d/m/Y H:i', strtotime($row['created_at']));
+                $row['total_money_format'] = number_format($row['total_money'], 0, ',', '.') . ' VNĐ';
+                $data[] = $row;
+            }
+        }
+        
+        // Trả về dữ liệu dạng JSON
+        header('Content-Type: application/json');
+        echo json_encode($data);
+        exit();
+    }
+    // Thêm vào class users trong file users.php
+    function get_order_details($order_id) {
+        // Gọi model orders_m để lấy dữ liệu
+        $orderModel = $this->model('orders_m');
+        
+        // 1. Lấy thông tin chung của đơn hàng
+        $orderInfo = $orderModel->order_getById($order_id);
+        
+        // 2. Lấy danh sách sản phẩm trong đơn hàng
+        $itemsResult = $orderModel->orderItems_getByOrderId($order_id);
+        $items = [];
+        if ($itemsResult && mysqli_num_rows($itemsResult) > 0) {
+            while ($row = mysqli_fetch_assoc($itemsResult)) {
+                $items[] = $row;
+            }
+        }
+        
+        // 3. Trả về JSON
+        $response = [
+            'info' => $orderInfo,
+            'items' => $items
+        ];
+        
+        header('Content-Type: application/json');
+        echo json_encode($response);
+        exit();
+    }
+    // Thêm hàm này vào file users.php
+    function add() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $full_name = trim($_POST['full_name']);
+            $email = trim($_POST['email']);
+            $phone = trim($_POST['phone']);
+            $password = $_POST['password'];
+
+    
+
+            // 2. Gọi Model để thêm người dùng
+            // Truyền null cho các trường chưa có (google_id, avatar, địa chỉ...)
+            $kq = $this->user->users_insert_default(
+                $full_name, $email, $phone, $password,
+                null, null, null, null, null, null
+            );
+
+            // 3. Xử lý thông báo trả về
+            if (session_status() === PHP_SESSION_NONE) session_start();
+
+            if ($kq === true) {
+                $_SESSION['status_msg'] = "success";
+            } elseif ($kq === "EMAIL_EXISTED") {
+                $_SESSION['status_msg'] = "email_existed";
+            } elseif ($kq === "PHONE_EXISTED") {
+                $_SESSION['status_msg'] = "phone_existed";
+            } else {
+                $_SESSION['status_msg'] = "error";
+            }
+
+            // 4. Quay lại trang danh sách
+            header("Location: /web_qlsp/users");
+            exit();
+        }
+    }
+
      function thongBao($kq){
         if (session_status() === PHP_SESSION_NONE) session_start();
                  if ($kq) {

@@ -349,7 +349,7 @@
                     <div class="row mb-3">
                         <div class="col-4">
                             <label>Giá trị giảm</label>
-                            <input type="number" class="form-control" id="edit_value" name="value" disabled>
+                            <input type="number" class="form-control" id="edit_value" name="value" readonly>
                         </div>
                         <div class="col-4">
                             <label>Đơn tối thiểu</label>

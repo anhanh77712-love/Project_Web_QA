@@ -6,7 +6,7 @@ class connectDB {
         $host = getenv('DB_HOST') ?: 'localhost';
         $user = getenv('DB_USER') ?: 'root';
         $pass = getenv('DB_PASS') ?: '';
-        $name = getenv('DB_NAME') ?: 'coolmate_db'; // Đảm bảo đây là tên DB đúng trên XAMPP của bạn
+        $name = getenv('DB_NAME') ?: 'quanao'; // Đảm bảo đây là tên DB đúng trên XAMPP của bạn
         $port = getenv('DB_PORT') ?: '3306';
 
         $this->con = mysqli_init();

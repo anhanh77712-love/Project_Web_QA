@@ -7,10 +7,15 @@
         <form class="d-flex align-items-center" action="/web_qlsp/users/search" method="get">
             <div class="input-group">
                 <span class="input-group-text"><i class="fas fa-search"></i></span>
-                <input type="text" name="q" class="form-control" placeholder="Tìm theo tên khách hàng" value="<?php echo isset($data['search_q']) ? htmlspecialchars($data['search_q']) : ''; ?>" />
+                <input type="text" name="q" class="form-control" placeholder="Tìm theo tên..." value="<?php echo isset($data['search_q']) ? htmlspecialchars($data['search_q']) : ''; ?>" />
             </div>
             <button type="submit" class="btn btn-primary ms-2">Tìm</button>
         </form>
+        
+        <button class="btn btn-primary shadow-sm ms-2" data-bs-toggle="modal" data-bs-target="#addUserModal">
+            <i class="fas fa-plus me-2"></i> Thêm mới
+        </button>
+
         <a href="/web_qlsp/users/export_excel" class="btn btn-success shadow-sm ms-2">
             <i class="fas fa-file-excel me-2"></i> Xuất Excel
         </a>
@@ -145,78 +150,240 @@
 
 <!-- DETAIL USER MODAL -->
 <div class="modal fade" id="detailUserModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title fw-bold">Chi tiết Khách hàng</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <div class="text-center mb-4">
-                    <img id="detail_avatar" src="" class="rounded-circle mb-3" width="120" height="120">
+            <div class="modal-body p-0">
+                <div class="text-center p-4 bg-light border-bottom">
+                    <img id="detail_avatar" src="" class="rounded-circle mb-3 shadow-sm" width="100" height="100" style="object-fit: cover;">
                     <h5 id="detail_fullname" class="fw-bold mb-1"></h5>
                     <span id="detail_role_badge" class="badge"></span>
                     <span id="detail_google_badge" class="badge bg-danger ms-1" style="display: none;">
-                        <i class="fab fa-google"></i> Google Account
+                        <i class="fab fa-google"></i> Google
                     </span>
                 </div>
-                
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label text-muted small">Email</label>
-                        <div class="fw-bold" id="detail_email"></div>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label text-muted small">Số điện thoại</label>
-                        <div class="fw-bold" id="detail_phone"></div>
-                    </div>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-12 mb-3">
-                        <label class="form-label text-muted small">Mật khẩu (Hash)</label>
-                        <div class="text-break small" id="detail_password" style="font-family: monospace; background: #f5f5f5; padding: 8px; border-radius: 4px;"></div>
-                    </div>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label text-muted small">Điểm tích lũy</label>
+
+                <ul class="nav nav-tabs px-3 pt-3" id="userTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active fw-bold" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab" aria-selected="true">
+                            <i class="fas fa-user text-primary me-1"></i> Thông tin cá nhân
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link fw-bold" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-selected="false">
+                            <i class="fas fa-shopping-cart text-success me-1"></i> Lịch sử mua hàng
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content p-4" id="userTabContent">
+                    
+                    <div class="tab-pane fade show active" id="info" role="tabpanel" tabindex="0">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted small"><i class="fas fa-envelope me-1"></i> Email</label>
+                                <div class="fw-bold" id="detail_email"></div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted small"><i class="fas fa-phone me-1"></i> Số điện thoại</label>
+                                <div class="fw-bold" id="detail_phone"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted small"><i class="fas fa-star text-warning me-1"></i> Điểm tích lũy</label>
+                                <div><span class="badge bg-warning text-dark fs-6" id="detail_points"></span></div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted small"><i class="fas fa-calendar-alt me-1"></i> Ngày tham gia</label>
+                                <div class="fw-bold" id="detail_created"></div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-muted small"><i class="fas fa-key me-1"></i> Mật khẩu (Hash)</label>
+                            <div class="text-break small" id="detail_password" style="font-family: monospace; background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid #dee2e6;"></div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <h6 class="fw-bold mb-3"><i class="fas fa-map-marker-alt text-danger me-1"></i> Địa chỉ giao hàng</h6>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label text-muted small">Mã Tỉnh/TP</label>
+                                <div class="fw-bold" id="detail_province"></div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label text-muted small">Mã Quận/Huyện</label>
+                                <div class="fw-bold" id="detail_district"></div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label text-muted small">Mã Phường/Xã</label>
+                                <div class="fw-bold" id="detail_ward"></div>
+                            </div>
+                        </div>
                         <div>
-                            <span class="badge bg-warning text-dark fs-6" id="detail_points"></span>
+                            <label class="form-label text-muted small">Địa chỉ chi tiết</label>
+                            <div class="fw-bold" id="detail_address"></div>
                         </div>
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label text-muted small">Ngày tham gia</label>
-                        <div class="fw-bold" id="detail_created"></div>
+
+                    <div class="tab-pane fade" id="history" role="tabpanel" tabindex="0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Mã ĐH</th>
+                                        <th>Ngày đặt</th>
+                                        <th>Tổng tiền</th>
+                                        <th>Thanh toán</th>
+                                        <th>Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="order_history_body">
+                                    </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
-                
-                <hr>
-                
-                <h6 class="fw-bold mb-3">Địa chỉ</h6>
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label text-muted small">Mã Tỉnh/TP</label>
-                        <div id="detail_province"></div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label text-muted small">Mã Quận/Huyện</label>
-                        <div id="detail_district"></div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label text-muted small">Mã Phường/Xã</label>
-                        <div id="detail_ward"></div>
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label text-muted small">Địa chỉ chi tiết</label>
-                    <div id="detail_address"></div>
+                    
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="orderDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-file-invoice-dollar text-primary me-2"></i>Chi tiết đơn hàng <span id="modal_order_id" class="text-danger"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="bg-light p-3 rounded mb-4 border">
+                    <h6 class="fw-bold mb-3 border-bottom pb-2">Thông tin giao hàng</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <span class="text-muted small">Người nhận:</span> 
+                            <strong id="modal_order_name"></strong>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <span class="text-muted small">Số điện thoại:</span> 
+                            <strong id="modal_order_phone"></strong>
+                        </div>
+                        <div class="col-md-12 mb-2">
+                            <span class="text-muted small">Địa chỉ:</span> 
+                            <strong id="modal_order_address"></strong>
+                        </div>
+                        <div class="col-md-12">
+                            <span class="text-muted small">Ghi chú:</span> 
+                            <span id="modal_order_note" class="fst-italic"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold mb-3">Sản phẩm đã mua</h6>
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered align-middle">
+                        <thead class="table-light text-center small">
+                            <tr>
+                                <th width="60">Ảnh</th>
+                                <th>Tên sản phẩm</th>
+                                <th width="100">Đơn giá</th>
+                                <th width="80">SL</th>
+                                <th width="120">Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modal_order_items_body">
+                            </tbody>
+                    </table>
+                </div>
+
+                <div class="row justify-content-end">
+                    <div class="col-md-5">
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <td class="text-muted">Tạm tính:</td>
+                                <td class="text-end fw-bold" id="modal_order_subtotal"></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Phí vận chuyển:</td>
+                                <td class="text-end fw-bold" id="modal_order_fee"></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Voucher giảm:</td>
+                                <td class="text-end fw-bold text-danger" id="modal_order_discount"></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Điểm trừ:</td>
+                                <td class="text-end fw-bold text-danger" id="modal_order_points"></td>
+                            </tr>
+                            <tr class="border-top">
+                                <td class="fw-bold fs-6">Tổng cộng:</td>
+                                <td class="text-end fw-bold fs-5 text-primary" id="modal_order_total"></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form action="/web_qlsp/users/add" method="POST">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-user-plus text-primary me-2"></i>Thêm Khách hàng mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted small">Họ và tên <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                            <input type="text" name="full_name" class="form-control" required placeholder="Nhập họ và tên">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted small">Email <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                            <input type="email" name="email" class="form-control" required placeholder="Nhập địa chỉ email">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted small">Số điện thoại <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                            <input type="text" name="phone" class="form-control" required pattern="[0-9]{9,11}" title="Vui lòng nhập số điện thoại hợp lệ" placeholder="Nhập số điện thoại">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted small">Mật khẩu <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                            <input type="password" name="password" class="form-control" required minlength="6" placeholder="Tạo mật khẩu (Ít nhất 6 ký tự)">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-primary px-4 fw-bold">Lưu khách hàng</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
 <link rel="stylesheet" href="/web_qlsp/Public/css/loading.css">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -225,10 +392,22 @@
 <script src="/web_qlsp/Public/js/user.js"></script>
 <script src="/web_qlsp/Public/js/result.js"></script>
 <script src="/web_qlsp/Public/js/loading.js"></script>
+<script src="/web_qlsp/Public/js/user_details.js"></script>
 <?php if(isset($_SESSION['status_msg'])): ?>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            checkFlashMessage("<?php echo $_SESSION['status_msg']; ?>");
+            let msg = "<?php echo $_SESSION['status_msg']; ?>";
+            
+            // Xử lý các mã lỗi riêng biệt từ Model trả về
+            if (msg === 'email_existed') {
+                Swal.fire('Thất bại', 'Email này đã được sử dụng cho tài khoản khác!', 'warning');
+            } else if (msg === 'phone_existed') {
+                Swal.fire('Thất bại', 'Số điện thoại này đã được sử dụng!', 'warning');
+            } else if (msg === 'success') {
+                Swal.fire('Thành công', 'Đã thêm khách hàng mới!', 'success');
+            } else {
+                checkFlashMessage(msg); // Hàm mặc định của bạn
+            }
         });
     </script>
     <?php unset($_SESSION['status_msg']); ?>
