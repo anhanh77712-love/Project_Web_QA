@@ -117,7 +117,7 @@ $user = $data['user_info'] ?? null;
             </div>
 
             <div class="modal-body p-0"> 
-                <form action="/web_qlsp/profile/update" method="POST" enctype="multipart/form-data">
+                <form action="/web_qlsp/api/customer/profile_api/update" method="POST" enctype="multipart/form-data">
                     <div class="row g-0">
                         
                         <div class="col-md-4 avatar_img text-center border-end">
@@ -223,7 +223,7 @@ $user = $data['user_info'] ?? null;
             <button type="button" class="btn-close custom-close-btn" data-bs-dismiss="modal" aria-label="Close" style="position: absolute; right: 15px; top: 15px; z-index: 10;"></button>
             
             <div class="modal-body p-5">
-                <form method="POST" action="/web_qlsp/profile/change_password" autocomplete="off">
+                <form method="POST" action="/web_qlsp/api/customer/profile_api/change_password" autocomplete="off">
                     
                     <h5 class="fw-bold mb-4 text-center" style="letter-spacing: 1px; color: #000;">ĐỔI MẬT KHẨU</h5>
 

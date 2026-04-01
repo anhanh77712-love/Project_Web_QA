@@ -14,7 +14,7 @@
     <!-- SEARCH BAR -->
     <div class="p-3 border-bottom bg-white">
         
-        <form method="POST" action="/web_qlsp/collections/search"
+        <form method="POST" action="/web_qlsp/api/collections_api/search"
               class="d-flex align-items-center w-100">
 
             <div class="search-wrapper position-relative me-auto">
@@ -141,7 +141,7 @@
                         </button>
 
                         <button class="btn-icon text-danger" 
-                            onclick="confirmDelete('/web_qlsp/collections/delete/<?php echo $c['id']; ?>')" title="Xóa">
+                            onclick="confirmDelete('/web_qlsp/api/collections_api/delete/<?php echo $c['id']; ?>')" title="Xóa">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -170,7 +170,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form method="POST" enctype="multipart/form-data" action="/web_qlsp/collections/update">
+                <form method="POST" enctype="multipart/form-data" action="/web_qlsp/api/collections_api/update">
                     <input type="hidden" name="id" id="edit_id">
                     <input type="hidden" name="old_image" id="edit_old_image">
 
@@ -207,7 +207,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form method="POST" enctype="multipart/form-data" action="/web_qlsp/collections/add">
+                <form method="POST" enctype="multipart/form-data" action="/web_qlsp/api/collections_api/add">
                     <div class="mb-3">
                         <label class="form-label">Tên Bộ sưu tập</label>
                         <input type="text" class="form-control" placeholder="VD: Mùa hè 2025" name="name" onkeyup="generateSlug(this.value, 'edit_slug')">
@@ -235,7 +235,7 @@
                 <h5 class="modal-title" id="importCollectionModalLabel">Nhập Bộ Sưu Tập từ Excel</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form action="/web_qlsp/collections/importExcelCollections" method="POST" enctype="multipart/form-data">
+            <form action="/web_qlsp/api/collections_api/importExcelCollections" method="POST" enctype="multipart/form-data">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="fileExcelCollection" class="form-label">Chọn file Excel (.xlsx, .xls)</label>

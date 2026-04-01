@@ -2,7 +2,8 @@
 
 <link rel="stylesheet" href="/web_qlsp/Public/Css/revenue.css?v=1.1">
 <link rel="stylesheet" href="/web_qlsp/Public/Css/chart.css?v=1.1">
-<form method="POST" action="/web_qlsp/revenue/Get_data">
+<?php /** @var array $data */ ?>
+<form method="POST" action="/web_qlsp/api/revenue_api/Get_data">
     <div class="revenue_two">
         <div class="time-wrapper">
         <label class="time-label">Thời gian lọc</label>
@@ -21,7 +22,7 @@
 
         <div class="btn-group">
             <button type="submit" class="btn-filter"><i class="fa-solid fa-filter"></i></button>
-            <button type="button" class="btn-reset" onclick="window.location.href='/web_qlsp/revenue/Get_data'"><i class="fa-solid fa-arrow-rotate-left"></i></button>
+            <button type="button" class="btn-reset" onclick="window.location.href='/web_qlsp/api/revenue_api/Get_data'"><i class="fa-solid fa-arrow-rotate-left"></i></button>
 
             <button type="submit" class="btn btn-success" name="export" value="1">
                 <i class="fas fa-file-excel me-2"></i> Xuất Excel

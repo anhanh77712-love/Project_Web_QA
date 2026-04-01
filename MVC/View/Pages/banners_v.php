@@ -16,7 +16,7 @@
                     <i class="fas fa-plus-circle me-1"></i> Thêm Banner Mới
                 </div>
                 <div class="card-body">
-                    <form action="/web_qlsp/banners/add" method="post" enctype="multipart/form-data">
+                    <form action="/web_qlsp/api/banners_api/insert" method="post" enctype="multipart/form-data">
                         <div class="mb-3">
                             <label class="form-label fw-bold">Tiêu đề (Ghi chú)</label>
                             <input type="text" class="form-control" placeholder="Ví dụ: Khuyến mãi Hè" name="title" required>
@@ -109,7 +109,7 @@
                                                     <i class="fas fa-edit"></i>
                                                 </button>
 
-                                                <a href="/web_qlsp/banners/delete/<?php echo $b['id']; ?>" 
+                                                <a href="/web_qlsp/api/banners_api/delete/<?php echo $b['id']; ?>" 
                                                    class="btn btn-danger btn-sm btn-delete" 
                                                    title="Xóa">
                                                     <i class="fas fa-trash-alt"></i>
@@ -146,7 +146,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form method="POST" action="/web_qlsp/banners/update" enctype="multipart/form-data">
+                <form method="POST" action="/web_qlsp/api/banners_api/update" enctype="multipart/form-data">
                     <input type="hidden" name="id" id="edit_id">
                     <input type="hidden" name="old_image" id="edit_old_image">
 

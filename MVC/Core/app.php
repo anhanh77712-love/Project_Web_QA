@@ -13,24 +13,39 @@ class app
 
         if ($arr != null) {
             // 1. Nhận diện luồng API
+            // ===============================================
             if (strtolower($arr[0]) == 'api') {
-                // Kiểm tra xem tên file API có tồn tại không
-                if (isset($arr[1]) && file_exists('./MVC/Controllers/Api/' . $arr[1] . '.php')) {
+                
+                // Trạng thái 1: Có thư mục con "customer" (/api/customer/cart_api/checkout)
+                if (isset($arr[1]) && strtolower($arr[1]) == 'customer' && isset($arr[2]) && file_exists('./MVC/Controllers/api/customer/' . $arr[2] . '.php')) {
                     include_once './MVC/Core/controllers_customer.php'; 
-                    include_once './MVC/Controllers/Api/' . $arr[1] . '.php';
+                    include_once './MVC/Controllers/api/customer/' . $arr[2] . '.php';
+                    $this->controller = $arr[2]; // VD: cart_api
+                    unset($arr[0]); // xóa 'api'
+                    unset($arr[1]); // xóa 'customer'
+                    unset($arr[2]); // xóa 'cart_api'
+                    $arr = array_values($arr); // Đẩy 'checkout' lên vị trí số 0
+                    $isApi = true;
+                    $controllerFound = true;
+                }
+                // Trạng thái 2: Không có thư mục con (/api/cart_api/checkout) - Giữ lại phòng hờ
+                else if (isset($arr[1]) && file_exists('./MVC/Controllers/api/' . $arr[1] . '.php')) {
+                    include_once './MVC/Core/controllers_customer.php'; 
+                    include_once './MVC/Controllers/api/' . $arr[1] . '.php';
                     $this->controller = $arr[1];
                     unset($arr[0]);
                     unset($arr[1]);
                     $arr = array_values($arr);
                     $isApi = true;
                     $controllerFound = true;
-                } else {
-                    // Nếu gọi link API sai, trả về lỗi JSON thay vì sập web
+                } 
+                // Nếu gọi link API sai
+                else {
                     header('Content-Type: application/json; charset=utf-8');
                     http_response_code(404);
                     echo json_encode([
                         'success' => false, 
-                        'message' => 'Lỗi: Không tìm thấy API này! Vui lòng kiểm tra lại URL hoặc tên file.'
+                        'message' => 'Lỗi: Không tìm thấy API này! Vui lòng kiểm tra lại URL.'
                     ]);
                     exit;
                 }

@@ -112,27 +112,27 @@
     <!-- Tabs lọc trạng thái -->
     <div class="order-tabs d-flex gap-2">
         <button class="order-tab <?= !isset($data['current_status']) ? 'active' : '' ?>" 
-                onclick="window.location.href='/web_qlsp/your_order'">
+                onclick="window.location.href='/web_qlsp/api/customer/your_order_api'">
             Tất cả (<?= isset($data['counts']) ? $data['counts']['all'] : 0 ?>)
         </button>
         <button class="order-tab <?= isset($data['current_status']) && $data['current_status'] == 'pending' ? 'active' : '' ?>" 
-                onclick="window.location.href='/web_qlsp/your_order?status=pending'">
+                onclick="window.location.href='/web_qlsp/api/customer/your_order_api?status=pending'">
             Chờ xác nhận (<?= isset($data['counts']) ? $data['counts']['pending'] : 0 ?>)
         </button>
         <button class="order-tab <?= isset($data['current_status']) && $data['current_status'] == 'confirmed' ? 'active' : '' ?>" 
-                onclick="window.location.href='/web_qlsp/your_order?status=confirmed'">
+                onclick="window.location.href='/web_qlsp/api/customer/your_order_api?status=confirmed'">
             Đã xác nhận (<?= isset($data['counts']) ? $data['counts']['confirmed'] : 0 ?>)
         </button>
         <button class="order-tab <?= isset($data['current_status']) && $data['current_status'] == 'shipping' ? 'active' : '' ?>" 
-                onclick="window.location.href='/web_qlsp/your_order?status=shipping'">
+                onclick="window.location.href='/web_qlsp/api/customer/your_order_api?status=shipping'">
             Đang giao (<?= isset($data['counts']) ? $data['counts']['shipping'] : 0 ?>)
         </button>
         <button class="order-tab <?= isset($data['current_status']) && $data['current_status'] == 'completed' ? 'active' : '' ?>" 
-                onclick="window.location.href='/web_qlsp/your_order?status=completed'">
+                onclick="window.location.href='/web_qlsp/api/customer/your_order_api?status=completed'">
             Hoàn thành (<?= isset($data['counts']) ? $data['counts']['completed'] : 0 ?>)
         </button>
         <button class="order-tab <?= isset($data['current_status']) && $data['current_status'] == 'cancelled' ? 'active' : '' ?>" 
-                onclick="window.location.href='/web_qlsp/your_order?status=cancelled'">
+                onclick="window.location.href='/web_qlsp/api/customer/your_order_api?status=cancelled'">
             Đã hủy (<?= isset($data['counts']) ? $data['counts']['cancelled'] : 0 ?>)
         </button>
     </div>
@@ -256,7 +256,7 @@
         <i class="fas fa-shopping-bag" style="font-size: 80px; color: #ccc;"></i>
         <h4 class="mt-3 text-muted">Chưa có đơn hàng nào</h4>
         <p class="text-muted">Hãy khám phá và mua sắm những sản phẩm yêu thích ngay!</p>
-        <a href="/web_qlsp/product_list_customer" class="btn btn-primary mt-3">Tiếp tục mua sắm</a>
+        <a href="/web_qlsp/api/customer/product_list_api" class="btn btn-primary mt-3">Tiếp tục mua sắm</a>
     </div>
     <?php } ?>
 </div>
@@ -282,6 +282,7 @@
 
 <script>
 function viewOrderDetail(orderId) {
+    // 1. Gắn ID vào modal và hiển thị hiệu ứng tải (Loading)
     document.getElementById('modal-order-id').textContent = orderId;
     document.getElementById('order-detail-content').innerHTML = `
         <div class="text-center py-5">
@@ -291,15 +292,31 @@ function viewOrderDetail(orderId) {
         </div>
     `;
     
+    // 2. Mở Modal
     var modal = new bootstrap.Modal(document.getElementById('orderDetailModal'));
     modal.show();
     
-    fetch('/web_qlsp/your_order/detail?id=' + orderId)
-        .then(response => response.json())
+    // 3. Gọi API lấy dữ liệu chi tiết
+    // Đã sửa 'order_id' thành 'id' để khớp với $_GET['id'] trong PHP
+    // Đã bỏ 'user_id' vì PHP tự động dùng $_SESSION['user_id']
+    fetch('/web_qlsp/api/customer/your_order_api/detail?id=' + orderId)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Mạng bị lỗi hoặc không thể kết nối API');
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
-                displayOrderDetail(data.order, data.items);
+                // Đã sửa lại tham số để khớp với phản hồi từ PHP: data.order và data.items
+                displayOrderDetail(data.order, data.items); 
+            } else {
+                 document.getElementById('order-detail-content').innerHTML = `<p class="text-danger text-center mt-3">${data.message || 'Không tìm thấy đơn hàng'}</p>`;
             }
+        })
+        .catch(error => {
+            document.getElementById('order-detail-content').innerHTML = `<p class="text-danger text-center mt-3">Lỗi tải dữ liệu. Vui lòng thử lại.</p>`;
+            console.error('Lỗi Fetch:', error);
         });
 }
 
@@ -313,25 +330,38 @@ function displayOrderDetail(order, items) {
     };
     
     let productsHtml = '';
-    items.forEach(item => {
-        const img = item.variant_image ? item.variant_image : item.product_image;
-        productsHtml += `
-            <div class="d-flex gap-3 py-3 border-bottom">
-                <img src="/web_qlsp/Public/Picture/${img}" 
-                     style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
-                <div class="flex-grow-1">
-                    <h6 class="mb-1">${item.product_name}</h6>
-                    <p class="text-muted mb-1" style="font-size: 14px;">
-                        Số lượng: ${item.quantity}${item.size ? ` | Size: ${item.size}` : ''}${item.color ? ` | Màu: ${item.color}` : ''}
-                    </p>
-                    <p class="fw-bold mb-0" style="color: #2f5acf;">
-                        ${parseInt(item.price).toLocaleString()}đ × ${item.quantity} = ${parseInt(item.total).toLocaleString()}đ
-                    </p>
+    // Kiểm tra items có tồn tại không
+    if (items && items.length > 0) {
+        items.forEach(item => {
+            const img = item.variant_image ? item.variant_image : item.product_image;
+            productsHtml += `
+                <div class="d-flex gap-3 py-3 border-bottom">
+                    <img src="/web_qlsp/Public/Picture/${img}" 
+                         style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1">${item.product_name}</h6>
+                        <p class="text-muted mb-1" style="font-size: 14px;">
+                            Số lượng: ${item.quantity}${item.size ? ` | Size: ${item.size}` : ''}${item.color ? ` | Màu: ${item.color}` : ''}
+                        </p>
+                        <p class="fw-bold mb-0" style="color: #2f5acf;">
+                            ${parseInt(item.price).toLocaleString()}đ × ${item.quantity} = ${parseInt(item.total).toLocaleString()}đ
+                        </p>
+                    </div>
                 </div>
-            </div>
-        `;
-    });
+            `;
+        });
+    } else {
+        productsHtml = '<p class="text-muted">Không có sản phẩm nào trong đơn hàng này.</p>';
+    }
     
+    // Kiểm tra order object có các thuộc tính mong muốn không trước khi in ra
+    const orderNotes = order.notes || order.note || ''; // Tùy thuộc DB của bạn lưu notes hay note
+    const emailStr = order.email || 'Không có';
+    const addressStr = order.address || order.shipping_address_detail || ''; // Tùy thuộc cột trong DB
+    const wardStr = order.ward_name || '';
+    const districtStr = order.district_name || '';
+    const provinceStr = order.province_name || '';
+
     const content = `
         <div class="mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -347,10 +377,10 @@ function displayOrderDetail(order, items) {
         
         <div class="mb-4">
             <h6 class="mb-3">Thông tin người nhận</h6>
-            <p class="mb-1"><strong>Họ tên:</strong> ${order.full_name}</p>
-            <p class="mb-1"><strong>Số điện thoại:</strong> ${order.phone}</p>
-            <p class="mb-1"><strong>Email:</strong> ${order.email || 'Không có'}</p>
-            <p class="mb-0"><strong>Địa chỉ:</strong> ${order.address}, ${order.ward_name}, ${order.district_name}, ${order.province_name}</p>
+            <p class="mb-1"><strong>Họ tên:</strong> ${order.customer_name || order.full_name}</p>
+            <p class="mb-1"><strong>Số điện thoại:</strong> ${order.customer_phone || order.phone}</p>
+            <p class="mb-1"><strong>Email:</strong> ${emailStr}</p>
+            <p class="mb-0"><strong>Địa chỉ:</strong> ${addressStr}, ${wardStr}, ${districtStr}, ${provinceStr}</p>
         </div>
         
         <div class="mb-4">
@@ -362,11 +392,11 @@ function displayOrderDetail(order, items) {
             <h6 class="mb-3">Thanh toán</h6>
             <div class="d-flex justify-content-between mb-2">
                 <span>Tạm tính:</span>
-                <span>${parseInt(order.subtotal).toLocaleString()}đ</span>
+                <span>${parseInt(order.subtotal || 0).toLocaleString()}đ</span>
             </div>
             <div class="d-flex justify-content-between mb-2">
                 <span>Phí vận chuyển:</span>
-                <span>${parseInt(order.shipping_fee).toLocaleString()}đ</span>
+                <span>${parseInt(order.shipping_fee || 0).toLocaleString()}đ</span>
             </div>
             ${order.discount_amount > 0 ? `
             <div class="d-flex justify-content-between mb-2">
@@ -376,17 +406,17 @@ function displayOrderDetail(order, items) {
             ` : ''}
             <div class="d-flex justify-content-between mb-2 pt-2 border-top">
                 <strong>Tổng cộng:</strong>
-                <strong style="color: #2f5acf; font-size: 18px;">${parseInt(order.grand_total).toLocaleString()}đ</strong>
+                <strong style="color: #2f5acf; font-size: 18px;">${parseInt(order.total_money || order.grand_total || 0).toLocaleString()}đ</strong>
             </div>
             <p class="text-muted mb-0 mt-2" style="font-size: 14px;">
                 <i class="fas fa-credit-card me-1"></i> ${order.payment_method === 'cod' ? 'Thanh toán khi nhận hàng' : 'Chuyển khoản'}
             </p>
         </div>
         
-        ${order.notes ? `
+        ${orderNotes ? `
         <div>
             <h6 class="mb-2">Ghi chú</h6>
-            <p class="text-muted mb-0">${order.notes}</p>
+            <p class="text-muted mb-0">${orderNotes}</p>
         </div>
         ` : ''}
     `;
@@ -420,7 +450,7 @@ function cancelOrder(orderId) {
             const formData = new FormData();
             formData.append('order_id', orderId);
             
-            fetch('/web_qlsp/your_order/cancel', {
+            fetch('/web_qlsp/api/customer/your_order_api/cancel', {
                 method: 'POST',
                 body: formData
             })
@@ -481,7 +511,7 @@ function confirmOrder(orderId) {
             const formData = new FormData();
             formData.append('order_id', orderId);
             
-            fetch('/web_qlsp/your_order/confirm', {
+            fetch('/web_qlsp/api/customer/your_order_api/confirm_order', {
                 method: 'POST',
                 body: formData
             })

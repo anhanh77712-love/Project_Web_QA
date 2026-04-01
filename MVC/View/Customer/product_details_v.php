@@ -360,7 +360,7 @@
     ?>
         <div style="text-align:center; padding:100px;">
             <h2>Sản phẩm không tồn tại</h2>
-            <a href="/web_qlsp/product_list_customer">Quay lại danh sách</a>
+            <a href="/web_qlsp/api/customer/product_list_api">Quay lại danh sách</a>
         </div>
     <?php 
         exit; 
@@ -455,7 +455,7 @@
                 <?php if(!empty($product['category_name'])): ?>
                 <div style="margin-bottom: 15px; font-size: 14px; color: #666;">
                     <strong>Danh mục:</strong> 
-                    <a href="/web_qlsp/product_list_customer?category=<?= urlencode($product['category_slug']) ?>" 
+                    <a href="/web_qlsp/api/customer/product_list_api?category=<?= urlencode($product['category_slug']) ?>" 
                        style="color: #2563eb; text-decoration: none;">
                         <?= htmlspecialchars($product['category_name']) ?>
                     </a>
@@ -570,7 +570,7 @@
                     </div>
                 <?php endif; ?>
 
-                <form id="addToCartForm" method="POST" action="/web_qlsp/cart/add_to_cart">
+                <form id="addToCartForm" method="POST" action="/web_qlsp/api/customer/cart_api/add_to_cart">
                     <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
                     <input type="hidden" name="product_name" value="<?= htmlspecialchars($product['name']) ?>">
                     <input type="hidden" name="product_price" value="<?= $product['base_price'] ?>">
@@ -629,7 +629,7 @@
                     <div class="related-card">
                         <div class="cool-card">
                             <div class="cool-card-img-wrapper">
-                                <a href="/web_qlsp/product_detail?slug=<?= urlencode($rp['slug']) ?>">
+                                <a href="/web_qlsp/api/customer/product_detail_api?slug=<?= urlencode($rp['slug']) ?>">
                                     <img src="/web_qlsp/Public/Picture/<?= htmlspecialchars($rp['thumbnail']) ?>" 
                                          class="product-image"
                                          data-product-id="<?= $rp['id'] ?>"
@@ -639,7 +639,7 @@
                             </div>
 
                             <div class="related-info">
-                                <a href="/web_qlsp/product_detail?slug=<?= urlencode($rp['slug']) ?>" class="related-name">
+                                <a href="/web_qlsp/api/customer/product_detail_api?slug=<?= urlencode($rp['slug']) ?>" class="related-name">
                                     <?= htmlspecialchars($rp['name']) ?>
                                 </a>
 
@@ -1138,7 +1138,7 @@
                 console.log('FormData:', Object.fromEntries(formData));
                 
                 // Gửi AJAX
-                fetch('/web_qlsp/cart/add_to_cart', {
+                fetch('/web_qlsp/api/customer/cart_api/add_to_cart', {
                     method: 'POST',
                     body: formData
                 })
@@ -1190,7 +1190,7 @@
         
         // Hàm cập nhật số lượng giỏ hàng trên header
         function updateCartCount() {
-            fetch('/web_qlsp/cart/get_cart_count')
+            fetch('/web_qlsp/api/customer/cart_api/get_cart_count')
                 .then(response => response.json())
                 .then(data => {
                     const cartCountElement = document.getElementById('cart-count');

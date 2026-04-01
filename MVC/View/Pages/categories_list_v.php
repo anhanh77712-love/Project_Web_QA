@@ -7,7 +7,7 @@
 <div class="card-table">
   <div class="p-3 border-bottom bg-white">
         
-        <form method="POST" action="/web_qlsp/categories_list/search"
+        <form method="POST" action="/web_qlsp/api/categories_api/search"
               class="d-flex align-items-center w-100">
 
             <div class="search-wrapper position-relative me-auto">
@@ -27,7 +27,7 @@
                     <i class="fas fa-search"></i> Tìm
                 </button>
 
-                <button type="button" class="btn btn-light-gray" onclick="window.location.href='/web_qlsp/categories_list'">
+                <button type="button" class="btn btn-light-gray" onclick="window.location.href='/web_qlsp/api/categories_api'">
                     <i class="fas fa-undo-alt"></i> Làm mới
                 </button>
 
@@ -109,7 +109,7 @@
                   <i class="fas fa-edit"></i>
                 </button>
                 <button class="btn btn-sm btn-outline-danger"
-                  onclick="confirmDelete('/web_qlsp/categories_list/delete/<?php echo $c['id']; ?>')" title="Xóa">
+                  onclick="confirmDelete('/web_qlsp/api/categories_api/delete/<?php echo $c['id']; ?>')" title="Xóa">
                   <i class="fas fa-trash"></i>
                 </button>
               </td>
@@ -138,7 +138,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <form method="POST" enctype="multipart/form-data" action="/web_qlsp/categories_list/add">
+        <form method="POST" enctype="multipart/form-data" action="/web_qlsp/api/categories_api/add">
           <div class="mb-3">
             <label class="form-label">Tên danh mục</label>
             <input type="text" name="name" class="form-control" required onkeyup="generateSlug(this.value, 'slug')">
@@ -166,7 +166,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <form method="POST" enctype="multipart/form-data" action="/web_qlsp/categories_list/update">
+        <form method="POST" enctype="multipart/form-data" action="/web_qlsp/api/categories_api/update">
           <input type="hidden" name="id" id="edit_id">
           <input type="hidden" name="old_image" id="edit_old_image">
 
@@ -203,7 +203,7 @@
                 <h5 class="modal-title" id="importModalLabel">Nhập Danh Mục từ Excel</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form action="/web_qlsp/categories_list/importExcelCat" method="POST" enctype="multipart/form-data">
+            <form action="/web_qlsp/api/categories_api/importExcelCat" method="POST" enctype="multipart/form-data">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="fileExcel" class="form-label">Chọn file Excel (.xlsx, .xls)</label>

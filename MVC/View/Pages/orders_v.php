@@ -277,7 +277,7 @@
             showConfirmButton: false
         });
 
-        fetch('/web_qlsp/orders/view_detail?id=' + orderId)
+        fetch('/web_qlsp/api/orders_api/view_detail?id=' + orderId)
             .then(response => {
                 if (!response.ok) throw new Error('Lỗi kết nối server');
                 return response.json();
@@ -409,7 +409,7 @@
                 formData.append('order_id', currentOrderId);
                 formData.append('status', newStatus);
 
-                fetch('/web_qlsp/orders/update_status', { method: 'POST', body: formData })
+                fetch('/web_qlsp/api/orders_api/update_status', { method: 'POST', body: formData })
                     .then(r => r.json())
                     .then(data => {
                         if (data.success) {
@@ -445,7 +445,7 @@
                 const formData = new FormData();
                 formData.append('order_id', orderId);
 
-                fetch('/web_qlsp/orders/delete_order', { method: 'POST', body: formData })
+                fetch('/web_qlsp/api/orders_api/delete_order', { method: 'POST', body: formData })
                     .then(r => r.json())
                     .then(data => {
                         if (data.success) {

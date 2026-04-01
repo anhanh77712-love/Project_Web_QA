@@ -73,7 +73,7 @@ if (session_status() == PHP_SESSION_NONE) {
             <div class="pill"><i class="fas fa-shield-alt"></i> Thanh toán an toàn</div>
         </div>
 
-        <form action="/web_qlsp/cart/checkout" method="POST" id="checkoutForm">
+        <form action="/web_qlsp/api/customer/cart_api/checkout" method="POST" id="checkoutForm">
             <input type="hidden" name="voucher_id" id="selectedVoucherId" value="">
             <input type="hidden" name="use_points" id="usePointsField" value="0">
             <input type="hidden" name="points_to_use" id="pointsToUseField" value="0">
@@ -180,7 +180,7 @@ if (session_status() == PHP_SESSION_NONE) {
                         <div class="empty-box">
                             <i class="fas fa-shopping-cart fa-2x mb-2"></i>
                             <p>Giỏ hàng của bạn đang trống</p>
-                            <a href="/web_qlsp/product_list_customer" class="btn btn-dark">Tiếp tục mua sắm</a>
+                            <a href="/web_qlsp/api/customer/product_list_api" class="btn btn-dark">Tiếp tục mua sắm</a>
                         </div>
                     <?php endif; ?>
                     </div>
@@ -254,7 +254,7 @@ $(document).ready(function() {
         var p_code = $(this).val();
         if(p_code != "") {
             $.ajax({
-                url: "/web_qlsp/cart/get_districts/" + p_code,
+                url: "/web_qlsp/api/customer/cart_api/get_districts/" + p_code,
                 method: "GET",
                 success: function(data) {
                     $('#district').html(data);
@@ -268,7 +268,7 @@ $(document).ready(function() {
         var d_code = $(this).val();
         if(d_code != "") {
             $.ajax({
-                url: "/web_qlsp/cart/get_wards/" + d_code,
+                url: "/web_qlsp/api/customer/cart_api/get_wards/" + d_code,
                 method: "GET",
                 success: function(data) {
                     $('#ward').html(data);
@@ -404,7 +404,7 @@ $(document).ready(function() {
         qty = Math.max(1, Math.min(5, qty + change));
         
         $.ajax({
-            url: '/web_qlsp/cart/update_quantity',
+            url: '/web_qlsp/api/customer/cart_api/update_quantity',
             method: 'POST',
             data: { cart_key: cartKey, quantity: qty },
             dataType: 'json',
@@ -430,7 +430,7 @@ $(document).ready(function() {
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
-                    url: '/web_qlsp/cart/remove_item', method: 'POST', data: { cart_key: cartKey },
+                    url: '/web_qlsp/api/customer/cart_api/remove_item', method: 'POST', data: { cart_key: cartKey },
                     success: function() { location.reload(); }
                 });
             }
@@ -439,7 +439,7 @@ $(document).ready(function() {
 
     function updateCartCount() {
         $.ajax({
-            url: '/web_qlsp/cart/get_cart_count', method: 'GET',
+            url: '/web_qlsp/api/customer/cart_api/get_cart_count', method: 'GET',
             success: function(response) {
                 const data = JSON.parse(response);
                 $('#cart-count').text(data.count);
@@ -487,18 +487,30 @@ $(document).ready(function() {
     // ======================================================
     
     // Khi bấm nút ở Footer, ta kích hoạt sự kiện submit của form
-    $('#fixedOrderBtn').on('click', function() {
+   // ======================================================
+    // 5. QUAN TRỌNG: SỬA NÚT ĐẶT HÀNG FOOTER & SUBMIT FORM
+    // ======================================================
+    
+    // Khi bấm nút ở Footer, ta kích hoạt sự kiện submit của form
+    $('#fixedOrderBtn').on('click', function(e) {
+        e.preventDefault(); // Ngăn hành vi mặc định của button type=button (dù không cần thiết lắm)
         if(!$(this).is(':disabled')){
-            // Dùng trigger submit để jQuery bắt được sự kiện
-            $('#checkoutForm').trigger('submit');
+            $('#checkoutForm').submit(); // Dùng .submit() thay vì .trigger('submit')
         }
     });
 
     // Bắt sự kiện submit form để gửi AJAX
     $('#checkoutForm').on('submit', function(e) {
-        e.preventDefault(); // CHẶN Load lại trang (Quan trọng nhất)
+        e.preventDefault(); // CHẶN Load lại trang
 
+        var formActionUrl = $(this).attr('action');
         var formData = new FormData(this);
+
+        // DEBUG: Kiểm tra xem Data đã vào Form chưa
+        console.log("Đang gửi dữ liệu đến URL:", formActionUrl);
+        for (var pair of formData.entries()) {
+            console.log(pair[0] + ': ' + pair[1]); 
+        }
 
         Swal.fire({
             title: 'Đang xử lý...',
@@ -508,14 +520,16 @@ $(document).ready(function() {
         });
 
         $.ajax({
-            url: $(this).attr('action'),
+            url: formActionUrl, // Hãy chắc chắn URL này trỏ đúng vào method checkout() trong cart_api.php
             method: 'POST',
             data: formData,
             contentType: false,
             processData: false,
             dataType: 'json',
             success: function(response) {
-                if (response.success) {
+                console.log("Server trả về:", response); // Log kết quả từ server
+
+                if (response && response.success) {
                     Swal.fire({
                         icon: 'success',
                         title: 'Đặt hàng thành công!',
@@ -523,22 +537,30 @@ $(document).ready(function() {
                         timer: 2000,
                         showConfirmButton: false
                     }).then(() => {
-                        window.location.href = response.redirect_url;
+                        // Chuyển hướng theo URL do server trả về
+                        if(response.redirect_url) {
+                            window.location.href = response.redirect_url;
+                        } else {
+                            // Fallback nếu server quên trả về redirect_url
+                            window.location.href = '/web_qlsp/your_order';
+                        }
                     });
                 } else {
                     Swal.fire({
                         icon: 'error',
                         title: 'Thất bại',
-                        text: response.message || 'Có lỗi xảy ra.'
+                        text: response ? (response.message || 'Có lỗi xảy ra.') : 'Lỗi không xác định.'
                     });
                 }
             },
             error: function(xhr, status, error) {
-                console.log(xhr.responseText); // Xem lỗi trong Console F12
+                console.error("Lỗi AJAX:", status, error);
+                console.error("Chi tiết response:", xhr.responseText); 
+                
                 Swal.fire({
                     icon: 'error',
-                    title: 'Lỗi hệ thống',
-                    text: 'Không thể kết nối đến máy chủ. Kiểm tra Console để biết thêm.'
+                    title: 'Lỗi kết nối',
+                    text: 'Không thể kết nối đến máy chủ. Nhấn F12 mở Console để xem chi tiết.'
                 });
             }
         });

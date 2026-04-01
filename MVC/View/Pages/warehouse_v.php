@@ -80,7 +80,7 @@
 		<option value="out" <?php echo (($_GET['status'] ?? '') === 'out') ? 'selected' : ''; ?>>Hết hàng</option>
 	</select>
 	<button class="btn btn-dark" type="submit"><i class="fas fa-filter me-2"></i>Lọc</button>
-	<a class="btn btn-outline-secondary" href="/web_qlsp/warehouse"><i class="fas fa-undo me-2"></i>Đặt lại</a>
+	<a class="btn btn-outline-secondary" href="/web_qlsp/api/warehouse_api/"><i class="fas fa-undo me-2"></i>Đặt lại</a>
 </form>
 
 <div class="card border-0 shadow-sm">
@@ -222,7 +222,7 @@ function applyFilters(e){
   if(q) params.set('q', q);
   if(cat) params.set('category', cat);
   if(st) params.set('status', st);
-  window.location.href = '/web_qlsp/warehouse' + (params.toString() ? ('?' + params.toString()) : '');
+  window.location.href = '/web_qlsp/api/warehouse_api/' + (params.toString() ? ('?' + params.toString()) : '');
   return false;
 }
 
@@ -251,7 +251,7 @@ function submitAdjust(){
   formData.append('variant_id', vid);
   formData.append('delta', delta);
   formData.append('reason', reason);
-  fetch('/web_qlsp/warehouse/adjust_stock', { method: 'POST', body: formData })
+  fetch('/web_qlsp/api/warehouse_api//adjust_stock', { method: 'POST', body: formData })
 	.then(r=>r.json())
 	.then(d=>{
 	  if(d && d.success){

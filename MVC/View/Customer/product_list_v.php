@@ -250,7 +250,7 @@
             if(radio.checked) {
                 currentParams.set('category', radio.value);
             }
-            var newUrl = '/web_qlsp/product_list_customer';
+            var newUrl = '/web_qlsp/api/customer/product_list_api';
             if(currentParams.toString()) {
                 newUrl += '?' + currentParams.toString();
             }
@@ -262,7 +262,7 @@
             if(radio.checked) {
                 currentParams.set('price', radio.value);
             }
-            var newUrl = '/web_qlsp/product_list_customer';
+            var newUrl = '/web_qlsp/api/customer/product_list_api';
             if(currentParams.toString()) {
                 newUrl += '?' + currentParams.toString();
             }
@@ -276,7 +276,7 @@
             } else {
                 currentParams.delete('sort');
             }
-            var newUrl = '/web_qlsp/product_list_customer';
+            var newUrl = '/web_qlsp/api/customer/product_list_api';
             if(currentParams.toString()) {
                 newUrl += '?' + currentParams.toString();
             }
@@ -367,14 +367,14 @@
                 ?>
                 <div class="fs-card">
                     <div class="fs-img-wrap">
-                        <a href="/web_qlsp/product_detail?slug=<?= urlencode($p['slug']) ?>">
+                        <a href="/web_qlsp/api/customer/product_detail_api?slug=<?= urlencode($p['slug']) ?>">
                             <img src="/web_qlsp/Public/Picture/<?= htmlspecialchars($p['thumbnail']) ?>" 
                                  alt="<?= htmlspecialchars($p['name']) ?>"
                                  onerror="this.src='https://via.placeholder.com/300x380'">
                         </a>
                     </div>
                     <div>
-                        <a href="/web_qlsp/product_detail?slug=<?= urlencode($p['slug']) ?>" class="fs-title">
+                        <a href="/web_qlsp/api/customer/product_detail_api?slug=<?= urlencode($p['slug']) ?>" class="fs-title">
                             <?= htmlspecialchars($p['name']) ?>
                         </a>
                         

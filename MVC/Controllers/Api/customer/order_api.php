@@ -3,22 +3,25 @@ class order_api extends controllers_customer {
     private $cart_model;
 
     function __construct() {
+        // Gọi model dành riêng cho việc đặt hàng/giỏ hàng của khách
         $this->cart_model = $this->model('cart_m');
     }
 
+    // Hàm hỗ trợ đọc dữ liệu JSON gửi lên từ JS/Frontend
     private function getRequestData() {
         $json = file_get_contents('php://input');
         return json_decode($json, true);
     }
 
-    // API POST: /web_qlsp/api/order_api/checkout
+    // API POST: /web_qlsp/api/Customer/order_api/checkout
     function checkout() {
         header('Access-Control-Allow-Origin: *');
         header('Content-Type: application/json; charset=utf-8');
         header('Access-Control-Allow-Methods: POST');
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            echo json_encode(['success' => false, 'message' => 'Chỉ chấp nhận POST']);
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Chỉ chấp nhận phương thức POST']);
             return;
         }
 
@@ -38,10 +41,12 @@ class order_api extends controllers_customer {
         $cart_items = $data['cart_items'] ?? []; 
 
         if (empty($customer_name) || empty($customer_phone) || empty($cart_items)) {
-            echo json_encode(['success' => false, 'message' => 'Thiếu thông tin hoặc giỏ hàng trống!']);
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Thiếu thông tin người nhận hoặc giỏ hàng trống!']);
             return;
         }
 
+        // Tính toán tổng tiền
         $subtotal = 0;
         foreach ($cart_items as $item) {
             $subtotal += ($item['price'] * $item['quantity']);
@@ -49,9 +54,10 @@ class order_api extends controllers_customer {
 
         $shipping_fee = 30000; 
         $discount_amount = 0;
-
         $voucher_id = $data['voucher_id'] ?? null;
         $voucher_code = null;
+
+        // Xử lý Voucher
         if ($voucher_id) {
             $voucher = $this->cart_model->voucher_getById($voucher_id);
             if ($voucher && $voucher['status'] == 1 && $subtotal >= $voucher['min_order_value']) {
@@ -70,6 +76,7 @@ class order_api extends controllers_customer {
         $total_money = $subtotal + $shipping_fee - $discount_amount;
         $points_earned = floor($subtotal / 100000); 
 
+        // Chuẩn bị dữ liệu lưu vào DB
         $order_data = [
             'user_id' => $user_id,
             'customer_name' => $customer_name,
@@ -92,6 +99,7 @@ class order_api extends controllers_customer {
             'note' => $note,
         ];
 
+        // Tạo đơn hàng
         $order_id = $this->cart_model->order_create($order_data);
 
         if ($order_id) {
@@ -107,6 +115,7 @@ class order_api extends controllers_customer {
                 ];
                 $this->cart_model->orderItem_insert($order_item_data);
                 
+                // Trừ tồn kho
                 if (!empty($item['variant_id'])) {
                     $this->cart_model->variant_updateStock($item['variant_id'], $item['quantity']);
                 } else {
@@ -114,10 +123,12 @@ class order_api extends controllers_customer {
                 }
             }
 
+            // Cập nhật lượt dùng voucher
             if ($voucher_id) {
                 $this->cart_model->voucher_updateUsedCount($voucher_id);
             }
 
+            http_response_code(201); // 201 Created
             echo json_encode([
                 'success' => true,
                 'message' => 'Đặt hàng thành công!',
@@ -127,6 +138,7 @@ class order_api extends controllers_customer {
                 ]
             ]);
         } else {
+            http_response_code(500);
             echo json_encode(['success' => false, 'message' => 'Lỗi server, không thể tạo đơn hàng']);
         }
     }

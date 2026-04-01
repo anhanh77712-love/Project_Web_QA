@@ -218,7 +218,7 @@ if($sections && mysqli_num_rows($sections) > 0):
                 <?php if(!empty($sec['collection_id']) && $home_model): 
                     $cSlug = $home_model->collection_getSlug($sec['collection_id']); 
                 ?>
-                    <a href="/web_qlsp/product_list_customer?sale=1" class="view-more">Xem thêm</a>
+                    <a href="/web_qlsp/api/customer/product_list_api?sale=1" class="view-more">Xem thêm</a>
                 <?php endif; ?>
             </div>
 
@@ -242,7 +242,7 @@ if($sections && mysqli_num_rows($sections) > 0):
                     <div class="cool-card">
                         
                         <div class="cool-card-img-wrapper">
-                            <a href="/web_qlsp/product_detail?slug=<?= urlencode($p['slug']) ?>">
+                            <a href="/web_qlsp/api/customer/product_detail_api?slug=<?= urlencode($p['slug']) ?>">
                                 <img src="/web_qlsp/Public/Picture/<?= htmlspecialchars($p['thumbnail']) ?>" 
                                      alt="<?= htmlspecialchars($p['name']) ?>"
                                      class="product-image"
@@ -251,7 +251,7 @@ if($sections && mysqli_num_rows($sections) > 0):
                         </div>
 
                         <div class="card-info">
-                            <a href="/web_qlsp/product_detail?slug=<?= urlencode($p['slug']) ?>" class="cool-prod-name">
+                            <a href="/web_qlsp/api/customer/product_detail_api?slug=<?= urlencode($p['slug']) ?>" class="cool-prod-name">
                                 <?= htmlspecialchars($p['name']) ?>
                             </a>
                             
@@ -342,7 +342,7 @@ if($sections && mysqli_num_rows($sections) > 0):
                                "https://placehold.co/300x400";
                 ?>
                 <div class="col-4 col-md-2">
-                    <a href="/web_qlsp/product_list_customer?category=<?= urlencode($c['slug']) ?>" class="d-block text-center">
+                    <a href="/web_qlsp/api/customer/product_list_api?category=<?= urlencode($c['slug']) ?>" class="d-block text-center">
                         <div class="rounded-3 overflow-hidden mb-2 shadow-sm">
                             <img src="<?= $img ?>" 
                                  class="w-100" 

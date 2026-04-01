@@ -10,7 +10,7 @@
                     Thêm Section Mới
                 </div>
                 <div class="card-body bg-light">
-                    <form method="POST" action="/web_qlsp/campaigns/add" enctype="multipart/form-data">
+                    <form method="POST" action="/web_qlsp/api/campaigns_api/add" enctype="multipart/form-data">
                         <div class="mb-3">
                             <label class="fw-bold">Loại hiển thị (*)</label>
                             <select class="form-select border-primary" id="sType" name="type" onchange="toggleForm()">
@@ -173,13 +173,13 @@
                                             title="Chỉnh sửa">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <a href="/web_qlsp/campaigns/toggle/<?php echo $c['id']; ?>" 
+                                    <a href="/web_qlsp/api/campaigns_api/toggle/<?php echo $c['id']; ?>" 
                                        class="btn btn-sm btn-<?php echo $c['status'] ? 'success' : 'secondary'; ?> me-1" 
                                        title="<?php echo $c['status'] ? 'Ẩn' : 'Hiển'; ?>">
                                         <i class="fas fa-eye<?php echo $c['status'] ? '' : '-slash'; ?>"></i>
                                     </a>
                                      <button class="btn btn-sm btn-danger"
-                                        onclick="confirmDelete('/web_qlsp/campaigns/delete/<?php echo $c['id']; ?>')" title="Xóa">
+                                        onclick="confirmDelete('/web_qlsp/api/campaigns_api/delete/<?php echo $c['id']; ?>')" title="Xóa">
                                     <i class="fas fa-trash"></i>
                                 </button>
                                 </td>
@@ -207,7 +207,7 @@
 <div class="modal fade" id="editModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <form method="POST" action="/web_qlsp/campaigns/update" enctype="multipart/form-data">
+            <form method="POST" action="/web_qlsp/api/campaigns_api/update" enctype="multipart/form-data">
                 <div class="modal-header bg-warning">
                     <h5 class="modal-title fw-bold">Chỉnh Sửa Section</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>

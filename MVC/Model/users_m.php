@@ -18,6 +18,7 @@ class users_m extends connectDB {
         $sql = "DELETE FROM users WHERE id=$id";
         return mysqli_query($this->con, $sql);
     }
+    
     public function users_insert_default($full_name, $email, $phone, $password, $google_id, $avatar, $province, $district, $ward, $address) {
     // 1. BẢO MẬT: Làm sạch dữ liệu đầu vào để tránh SQL Injection
     // (Lưu ý: $this->con là biến kết nối CSDL của bạn)

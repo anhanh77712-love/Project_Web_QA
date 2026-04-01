@@ -30,7 +30,7 @@
                         <h5 class="card-title fw-bold mb-3">
                             <i class="fas fa-info-circle text-primary"></i> Tạo sản phẩm mới + variant đầu tiên
                         </h5>
-                        <form action="/web_qlsp/product_add/Add" method="post" enctype="multipart/form-data">
+                        <form action="/web_qlsp/api/product_api/Add" method="post" enctype="multipart/form-data">
 
                     <!-- PHẦN 1: THÔNG TIN CƠ BẢN SẢN PHẨM -->
                     <div class="card bg-light mb-4">
@@ -249,7 +249,7 @@
                             Sử dụng form này để thêm một variant mới (màu, kích cỡ, giá, số lượng, hình ảnh khác) cho một sản phẩm đã tồn tại.
                         </p>
                         
-                        <form action="/web_qlsp/product_add/AddVariant" method="post" enctype="multipart/form-data">
+                        <form action="/web_qlsp/api/product_api/AddVariant" method="post" enctype="multipart/form-data">
 
                             <!-- CHỌN SẢN PHẨM HIỆN CÓ -->
                             <div class="card bg-light mb-4">
@@ -491,7 +491,7 @@
         function loadExistingVariants(productId) {
             if (!productId) return;
             $.ajax({
-                url: '/web_qlsp/product_add/GetVariants',
+                url: '/web_qlsp/api/product_api/GetVariants',
                 method: 'GET',
                 dataType: 'json',
                 data: { product_id: productId },

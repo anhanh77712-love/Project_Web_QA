@@ -4,7 +4,7 @@
     <h4 class="fw-bold mb-0">Quản lý Mã giảm giá</h4>
 </div>
 
-<div class="toolbar-container d-flex align-items-center gap-2"> <form method="POST" action="/web_qlsp/vouchers/search"
+<div class="toolbar-container d-flex align-items-center gap-2"> <form method="POST" action="/web_qlsp/api/vouchers_api/search"
           class="d-flex align-items-center flex-grow-1"> 
 
         <div class="search-wrapper me-auto">
@@ -22,7 +22,7 @@
                 <i class="fas fa-search"></i> Tìm
             </button>
 
-            <button type="button" class="btn btn-light-gray" onclick="window.location.href='/web_qlsp/vouchers/reset'">
+            <button type="button" class="btn btn-light-gray" onclick="window.location.href='/web_qlsp/api/vouchers_api/reset'">
                 <i class="fas fa-undo-alt"></i> Làm mới
             </button>
 
@@ -215,7 +215,7 @@
                 </button>
                 
                 <button class="btn btn-sm btn-outline-danger border-0"
-                    onclick="confirmDelete('/web_qlsp/vouchers/delete/<?php echo $v['id']; ?>')">
+                    onclick="confirmDelete('/web_qlsp/api/vouchers_api/delete/<?php echo $v['id']; ?>')">
                     <i class="fas fa-trash"></i>
                 </button>
             </td>
@@ -238,7 +238,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form method="POST" action="/web_qlsp/vouchers/add">
+                <form method="POST" action="/web_qlsp/api/vouchers_api/add">
                     
                     <div class="row mb-3">
                         <div class="col-md-6">
@@ -322,7 +322,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form method="POST" action="/web_qlsp/vouchers/update">
+                <form method="POST" action="/web_qlsp/api/vouchers_api/update">
                     <input type="hidden" id="edit_id" name="id">
 
                     <div class="mb-3">
@@ -388,7 +388,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             
-            <form method="POST" action="/web_qlsp/vouchers/import" enctype="multipart/form-data">
+            <form method="POST" action="/web_qlsp/api/vouchers_api/import" enctype="multipart/form-data">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label fw-bold">Chọn file Excel (.xlsx)</label>
