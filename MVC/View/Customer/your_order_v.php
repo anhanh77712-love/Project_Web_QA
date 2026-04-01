@@ -511,7 +511,7 @@ function confirmOrder(orderId) {
             const formData = new FormData();
             formData.append('order_id', orderId);
             
-            fetch('/web_qlsp/api/customer/your_order_api/confirm_order', {
+            fetch('/web_qlsp/api/customer/your_order_api/confirm', {
                 method: 'POST',
                 body: formData
             })

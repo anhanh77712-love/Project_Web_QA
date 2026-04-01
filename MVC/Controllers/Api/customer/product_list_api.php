@@ -85,59 +85,102 @@ class product_list_api extends controllers_customer {
     }
 
     private function build_product_query($p) {
-        // Xử lý khoảng giá
-        $min = 0; $max = 999999999;
-        if($p['price_range']) {
-            $parts = explode('-', $p['price_range']);
-            if(count($parts) == 2) {
-                $min = intval($parts[0]); $max = intval($parts[1]);
+    // 1. Xử lý khoảng giá (giữ nguyên logic gốc)
+    $min = 0; 
+    $max = 999999999;
+    if($p['price_range']) {
+        $parts = explode('-', $p['price_range']);
+        if(count($parts) == 2) {
+            $min = intval($parts[0]); 
+            $max = intval($parts[1]);
+        }
+    }
+
+    // 2. Logic SALE (Flash Sale) - Ưu tiên cao nhất
+    if($p['sale'] === 1) {
+        $products = null;
+        $flashSlug = '';
+        $sections = $this->home_model->sections_getActive();
+        if($sections && mysqli_num_rows($sections) > 0) {
+            mysqli_data_seek($sections, 0);
+            while($sec = mysqli_fetch_assoc($sections)) {
+                if(strtolower($sec['section_type']) === 'flash_sale' && intval($sec['status']) === 1) {
+                    $collectionId = intval($sec['collection_id']);
+                    if($collectionId > 0) {
+                        $flashSlug = $this->home_model->collection_getSlug($collectionId);
+                    }
+                    break;
+                }
             }
         }
 
-        // Ưu tiên 1: Xử lý logic SALE (Flash Sale)
-        if($p['sale'] === 1) {
-            $flashSlug = '';
-            $sections = $this->home_model->sections_getActive();
-            if($sections) {
-                while($sec = mysqli_fetch_assoc($sections)) {
-                    if(strtolower($sec['section_type']) === 'flash_sale' && intval($sec['status']) === 1) {
-                        $flashSlug = $this->home_model->collection_getSlug(intval($sec['collection_id']));
-                        break;
-                    }
-                }
-            }
-            if($flashSlug) {
-                if($p['category'] && $p['price_range']) 
-                    return $this->prd_list->products_selectByCollectionCategoryAndPrice($flashSlug, $p['category'], $min, $max, $p['sort']);
-                if($p['category']) 
-                    return $this->prd_list->products_selectByCollectionAndCategory($flashSlug, $p['category'], $p['sort']);
+        if($flashSlug) {
+            if($p['category'] && $p['price_range']) {
+                return $this->prd_list->products_selectByCollectionCategoryAndPrice($flashSlug, $p['category'], $min, $max, $p['sort']);
+            } elseif($p['category']) {
+                return $this->prd_list->products_selectByCollectionAndCategory($flashSlug, $p['category'], $p['sort']);
+            } elseif($p['price_range']) {
+                return $this->prd_list->products_selectByCollectionAndPriceRange($flashSlug, $min, $max, $p['sort']);
+            } else {
                 return $this->prd_list->products_selectByCollection($flashSlug, $p['sort']);
             }
         }
-
-        // Ưu tiên 2: Bestseller
-        if($p['filter'] === 'bestseller') {
-            if($p['category']) return $this->prd_list->products_selectBestsellerByCategory($p['category'], $p['sort']);
-            return $this->prd_list->products_selectBestseller($p['sort']);
-        }
-
-        // Ưu tiên 3: New
-        if($p['filter'] === 'new') {
-            if($p['category']) return $this->prd_list->products_selectNewByCategory($p['category'], $p['sort']);
-            return $this->prd_list->products_selectNew($p['sort']);
-        }
-
-        // Ưu tiên 4: Search
-        if($p['search']) {
-            if($p['search'] === 'Áo' || $p['search'] === 'Quần') return $this->prd_list->products_searchByKeywordPrefix($p['search'], $p['sort']);
-            return $this->prd_list->products_searchByKeyword($p['search'], $p['sort']);
-        }
-
-        // Ưu tiên 5: Category & Price
-        if($p['category']) return $this->prd_list->products_selectByCategory($p['category'], $p['sort']);
-        if($p['collection']) return $this->prd_list->products_selectByCollection($p['collection'], $p['sort']);
-
-        // Mặc định: Lấy tất cả
+        // Fallback sale
         return $this->prd_list->products_selectAll($p['sort']);
     }
+
+    // 3. Logic BESTSELLER
+    if($p['filter'] === 'bestseller') {
+        if($p['category'] && $p['price_range']) {
+            return $this->prd_list->products_selectBestsellerByCategoryAndPrice($p['category'], $min, $max, $p['sort']);
+        } elseif($p['category']) {
+            return $this->prd_list->products_selectBestsellerByCategory($p['category'], $p['sort']);
+        } elseif($p['price_range']) {
+            return $this->prd_list->products_selectBestsellerByPrice($min, $max, $p['sort']);
+        }
+        return $this->prd_list->products_selectBestseller($p['sort']);
+    }
+
+    // 4. Logic NEW
+    if($p['filter'] === 'new') {
+        if($p['category'] && $p['price_range']) {
+            return $this->prd_list->products_selectNewByCategoryAndPrice($p['category'], $min, $max, $p['sort']);
+        } elseif($p['category']) {
+            return $this->prd_list->products_selectNewByCategory($p['category'], $p['sort']);
+        } elseif($p['price_range']) {
+            return $this->prd_list->products_selectNewByPrice($min, $max, $p['sort']);
+        }
+        return $this->prd_list->products_selectNew($p['sort']);
+    }
+
+    // 5. Logic SEARCH
+    if($p['search']) {
+        if($p['category'] && $p['price_range']) {
+            return $this->prd_list->products_searchByCategoryPriceAndKeyword($p['category'], $min, $max, $p['search'], $p['sort']);
+        } elseif($p['category']) {
+            return $this->prd_list->products_searchByCategoryAndKeyword($p['category'], $p['search'], $p['sort']);
+        } elseif($p['price_range']) {
+            return $this->prd_list->products_searchByPriceAndKeyword($min, $max, $p['search'], $p['sort']);
+        } else {
+            if($p['search'] === 'Áo' || $p['search'] === 'Quần' || $p['search'] === 'Ao' || $p['search'] === 'Quan') {
+                return $this->prd_list->products_searchByKeywordPrefix($p['search'], $p['sort']);
+            }
+            return $this->prd_list->products_searchByKeyword($p['search'], $p['sort']);
+        }
+    }
+
+    // 6. Logic Category & Price thông thường
+    if($p['category'] && $p['price_range']) {
+        return $this->prd_list->products_selectByCategoryAndPrice($p['category'], $min, $max, $p['sort']);
+    } elseif($p['category']) {
+        return $this->prd_list->products_selectByCategory($p['category'], $p['sort']);
+    } elseif($p['price_range']) {
+        return $this->prd_list->products_selectByPriceRange($min, $max, $p['sort']);
+    } elseif($p['collection']) {
+        return $this->prd_list->products_selectByCollection($p['collection'], $p['sort']);
+    }
+
+    // 7. Mặc định
+    return $this->prd_list->products_selectAll($p['sort']);
+}
 }
