@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="/web_qlsp/Public/Css/style.css?v=1.1">
     <link rel="stylesheet" href="/web_qlsp/Public/Css/contact.css?v=1.0">
     <link rel="stylesheet" href="/web_qlsp/Public/Css/nam.css?v=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         /* CSS cho SweetAlert2 giống ý tưởng gốc của bạn */
@@ -515,49 +516,95 @@ $(document).ready(function() {
     }
 
     // 1. XỬ LÝ ĐĂNG NHẬP BẰNG AJAX
-    const formLogin = document.getElementById('formLoginCustomer');
-    if(formLogin) {
-        formLogin.addEventListener('submit', function(e) {
-            e.preventDefault();
-            Swal.fire({ title: 'Đang xác thực...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-            
-            fetch('/web_qlsp/login/login', { method: 'POST', body: new FormData(this) })
-                .then(res => res.json())
-                .then(data => {
-                    if(data.success) {
-                        Swal.fire({
-                            title: `Chào mừng ${data.userName}!`,
-                            text: `Bạn đang đăng nhập với quyền: ${data.roleName}`,
-                            icon: 'success',
-                            iconColor: '#28a745',
-                            background: '#ffffff',
-                            showConfirmButton: false,
-                            timer: 1500,
-                            timerProgressBar: true,
-                            customClass: { popup: 'my-popup-class', title: 'my-title-class' }
-                        }).then(() => {
-                            Swal.fire({
-                                title: 'Đang khởi tạo hệ thống',
-                                html: '<div class="mt-3"><i class="fas fa-sync fa-spin fa-2x" style="color: #3498db;"></i><p class="mt-2">Vui lòng đợi trong giây lát...</p></div>',
-                                allowOutsideClick: false, showConfirmButton: false, background: '#f8f9fa',
-                                customClass: { popup: 'my-popup-class' },
-                                didOpen: () => Swal.showLoading()
-                            });
-                            setTimeout(() => { window.location.href = data.redirect; }, 1000);
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: '<span style="color:#e74c3c">Đăng nhập thất bại</span>',
-                            text: data.message,
-                            confirmButtonText: '<i class="fa fa-arrow-left"></i> Thử lại ngay',
-                            confirmButtonColor: '#e74c3c',
-                            customClass: { popup: 'my-popup-class' }
-                        });
+const formLogin = document.getElementById('formLoginCustomer');
+if (formLogin) {
+    formLogin.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        // Lấy nút submit và lưu lại nội dung gốc
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerHTML;
+
+        // Vô hiệu hóa nút và thêm hiệu ứng spinner loading vào chính nút đó
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> ĐANG XÁC THỰC...';
+
+        fetch('/web_qlsp/login/login', { method: 'POST', body: new FormData(this) })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Đóng modal đăng nhập hiện tại một cách mượt mà
+                    const loginModalEl = document.getElementById('loginModal');
+                    const loginModal = bootstrap.Modal.getInstance(loginModalEl);
+                    if (loginModal) loginModal.hide();
+
+                    // Hiển thị thông báo thành công tinh tế
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Đăng nhập thành công',
+                        text: `Chào mừng trở lại, ${data.userName}`,
+                        showConfirmButton: false,
+                        timer: 1500,
+                        timerProgressBar: true,
+                        width: '24em',
+                        color: '#2c3e50',
+                        showClass: {
+                            popup: 'animate__animated animate__fadeInDown animate__faster'
+                        },
+                        hideClass: {
+                            popup: 'animate__animated animate__fadeOutUp animate__faster'
+                        },
+                        customClass: {
+                            popup: 'my-popup-class shadow-lg border-0',
+                            title: 'fs-5 fw-bold'
+                        }
+                    }).then(() => {
+                        // Hiệu ứng Fade out toàn trang trước khi chuyển hướng
+                        document.body.style.opacity = '0';
+                        document.body.style.transition = 'opacity 0.4s ease-in-out';
+                        setTimeout(() => {
+                            window.location.href = data.redirect;
+                        }, 400);
+                    });
+                } else {
+                    // Phục hồi lại nút đăng nhập
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText;
+
+                    // Hiển thị lỗi nghiêm túc, rõ ràng
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Không thể đăng nhập',
+                        text: data.message || 'Email hoặc mật khẩu không chính xác.',
+                        confirmButtonText: 'THỬ LẠI',
+                        buttonsStyling: false,
+                        customClass: {
+                            popup: 'my-popup-class rounded-3',
+                            title: 'fs-5 fw-bold text-dark',
+                            confirmButton: 'btn btn-dark px-4 py-2 fw-bold w-100 mt-2' // Chuyển nút về màu đen Coolmate
+                        }
+                    });
+                }
+            })
+            .catch(() => {
+                // Phục hồi lại nút đăng nhập khi có lỗi mạng
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi kết nối',
+                    text: 'Không thể kết nối với máy chủ. Vui lòng kiểm tra lại mạng.',
+                    confirmButtonText: 'ĐÓNG',
+                    buttonsStyling: false,
+                    customClass: {
+                        popup: 'my-popup-class rounded-3',
+                        confirmButton: 'btn btn-dark px-4 py-2 fw-bold w-100 mt-2'
                     }
-                }).catch(() => Swal.fire('Lỗi', 'Không thể kết nối máy chủ', 'error'));
-        });
-    }
+                });
+            });
+    });
+}
 
     // 2. XỬ LÝ ĐĂNG KÝ BẰNG AJAX
     const formRegister = document.getElementById('formRegisterCustomer');
