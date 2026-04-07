@@ -10,6 +10,12 @@ class profile extends controllers_customer {
         $this->profile_model = $this->model('profile_m');
     }
 
+    private function setApiHeader() {
+        header('Access-Control-Allow-Origin: *');
+        header('Content-Type: application/json; charset=utf-8');
+    }
+
+    // 1. TẢI GIAO DIỆN HỒ SƠ
     function Get_data() {
         if (!isset($_SESSION['user_id'])) {
             header('Location: /web_qlsp/home');
@@ -41,15 +47,16 @@ class profile extends controllers_customer {
         ]);
     }
 
-    public function update() {
+    // 2. API CẬP NHẬT HỒ SƠ & ẢNH ĐẠI DIỆN
+    public function api_update() {
+        $this->setApiHeader();
+
         if (!isset($_SESSION['user_id'])) {
-            header('Location: /web_qlsp/home');
-            exit;
+            echo json_encode(['success' => false, 'message' => 'Vui lòng đăng nhập.']); exit;
         }
 
         if ($_SERVER['REQUEST_METHOD'] != 'POST') {
-            header('Location: /web_qlsp/profile');
-            exit;
+            echo json_encode(['success' => false, 'message' => 'Lỗi phương thức.']); exit;
         }
 
         $user_id = $_SESSION['user_id'];
@@ -62,152 +69,57 @@ class profile extends controllers_customer {
         $address_detail = trim($_POST['address_detail'] ?? '');
 
         if ($full_name === '' || $phone === '' || $province_code === '' || $district_code === '' || $ward_code === '' || $address_detail === '') {
-            $_SESSION['error'] = 'Vui lòng nhập đầy đủ thông tin hồ sơ.';
-            header('Location: /web_qlsp/profile');
-            exit;
+            echo json_encode(['success' => false, 'message' => 'Vui lòng nhập đầy đủ thông tin hồ sơ.']); exit;
         }
 
-        // --- BẮT ĐẦU XỬ LÝ ẢNH ---
-        
-        $avatar = ''; // Khởi tạo biến avatar
+        $avatar = ''; 
 
-        // 1. Kiểm tra xem có file ảnh mới được upload không
+        // Xử lý upload ảnh
         if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] == 0) {
             $target_dir = $_SERVER['DOCUMENT_ROOT'] . "/web_qlsp/Public/Picture/users/";
             $file_name = time() . '_' . basename($_FILES["avatar"]["name"]);
             $target_file = $target_dir . $file_name;
             
             if (move_uploaded_file($_FILES["avatar"]["tmp_name"], $target_file)) {
-                $avatar = $file_name; // Lấy tên ảnh mới upload
+                $avatar = $file_name; 
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Lỗi lưu ảnh lên máy chủ.']); exit;
             }
         } 
         
-        // 2. Nếu $avatar vẫn rỗng (không upload mới), lấy ảnh cũ từ Database
+        // Nếu không có ảnh mới, lấy lại ảnh cũ
         if (empty($avatar)) {
-            // SỬA: Dùng hàm user_getById (đã dùng ở Get_data) thay vì hàm get_user_info bị lỗi
             $current_user = $this->profile_model->user_getById($user_id); 
-
             if ($current_user) {
-                // Nếu hàm model trả về mảng, lấy trường avatar
-                // Đảm bảo tên trường trong Database là 'avatar'
                 $avatar = isset($current_user['avatar']) ? $current_user['avatar'] : '';
             }
         }
 
-        // --- KẾT THÚC XỬ LÝ ẢNH ---
-
-        // Gọi user_updateProfile
         $ok = $this->profile_model->user_updateProfile(
-            $user_id,
-            $full_name,
-            $phone,
-            $province_code,
-            $district_code,
-            $ward_code,
-            $address_detail,
-            $avatar 
+            $user_id, $full_name, $phone, $province_code, $district_code, $ward_code, $address_detail, $avatar 
         );
 
         if ($ok) {
             $_SESSION['user_name'] = $full_name;
-            $_SESSION['success'] = 'Cập nhật hồ sơ thành công.';
-        } else {
-            $_SESSION['error'] = 'Cập nhật hồ sơ thất bại. Vui lòng thử lại.';
-        }
+            $_SESSION['user_avatar'] = $avatar; // Cập nhật luôn avatar trên Navbar
 
-        header('Location: /web_qlsp/profile');
+            echo json_encode(['success' => true, 'message' => 'Cập nhật hồ sơ thành công.']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Cập nhật hồ sơ thất bại. Vui lòng thử lại.']);
+        }
         exit;
     }
-    // public function update() {
-    //     if (!isset($_SESSION['user_id'])) {
-    //         header('Location: /web_qlsp/home');
-    //         exit;
-    //     }
 
-    //     if ($_SERVER['REQUEST_METHOD'] != 'POST') {
-    //         header('Location: /web_qlsp/profile');
-    //         exit;
-    //     }
+    // 3. API ĐỔI MẬT KHẨU
+    function api_change_password() {
+        $this->setApiHeader();
 
-    //     $user_id = $_SESSION['user_id'];
-
-    //     $full_name      = trim($_POST['full_name'] ?? '');
-    //     $phone          = trim($_POST['phone'] ?? '');
-    //     $province_code  = trim($_POST['province_code'] ?? '');
-    //     $district_code  = trim($_POST['district_code'] ?? '');
-    //     $ward_code      = trim($_POST['ward_code'] ?? '');
-    //     $address_detail = trim($_POST['address_detail'] ?? '');
-
-    //     if ($full_name === '' || $phone === '' || $province_code === '' || $district_code === '' || $ward_code === '' || $address_detail === '') {
-    //         $_SESSION['error'] = 'Vui lòng nhập đầy đủ thông tin địa chỉ và số điện thoại.';
-    //         header('Location: /web_qlsp/profile');
-    //         exit;
-    //     }
-
-    //     // --- BẮT ĐẦU XỬ LÝ ẢNH ---
-    //     $avatar = ''; 
-
-    //     // 1. Lấy thông tin user hiện tại (để lấy ảnh cũ làm mặc định)
-    //     $current_user = $this->profile_model->user_getById($user_id);
-    //     if ($current_user) {
-    //         $avatar = isset($current_user['avatar']) ? $current_user['avatar'] : '';
-    //     }
-
-    //     // 2. Kiểm tra xem có upload ảnh mới không
-    //     if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] == 0) {
-    //         // SỬ DỤNG __DIR__ ĐỂ LẤY ĐƯỜNG DẪN TƯƠNG ĐỐI TỪ FILE CONTROLLER (Chuẩn và ít lỗi nhất)
-    //         // Vì thư mục hiện tại là MVC/Controllers/Customer, ta lùi lại 3 cấp để về thư mục gốc
-    //         $target_dir = dirname(dirname(__DIR__)) . "/Public/Picture/users/";
-            
-    //         // Nếu thư mục chưa tồn tại thì tạo mới
-    //         if (!file_exists($target_dir)) {
-    //             mkdir($target_dir, 0777, true);
-    //         }
-
-    //         $file_extension = pathinfo($_FILES["avatar"]["name"], PATHINFO_EXTENSION);
-    //         $file_name = 'user_' . $user_id . '_' . time() . '.' . $file_extension; 
-    //         $target_file = $target_dir . $file_name;
-            
-    //         if (move_uploaded_file($_FILES["avatar"]["tmp_name"], $target_file)) {
-    //             $avatar = $file_name; // Cập nhật tên ảnh mới nếu upload thành công
-    //         }
-    //     } 
-    //     // --- KẾT THÚC XỬ LÝ ẢNH ---
-
-    //     // Gọi hàm update trong Model
-    //     $ok = $this->profile_model->user_updateProfile(
-    //         $user_id,
-    //         $full_name,
-    //         $phone,
-    //         $province_code,
-    //         $district_code,
-    //         $ward_code,
-    //         $address_detail,
-    //         $avatar 
-    //     );
-
-    //     // Lưu thông báo vào Session
-    //     if ($ok) {
-    //         $_SESSION['user_name'] = $full_name;
-    //         $_SESSION['success'] = 'Cập nhật hồ sơ thành công!';
-    //     } else {
-    //         $_SESSION['error'] = 'Có lỗi xảy ra, cập nhật thất bại!';
-    //     }
-
-    //     // Chuyển hướng về trang profile
-    //     header('Location: /web_qlsp/profile');
-    //     exit;
-    // }
-
-    function change_password() {
         if (!isset($_SESSION['user_id'])) {
-            header('Location: /web_qlsp/home');
-            exit;
+            echo json_encode(['success' => false, 'message' => 'Vui lòng đăng nhập.']); exit;
         }
 
         if ($_SERVER['REQUEST_METHOD'] != 'POST') {
-            header('Location: /web_qlsp/profile');
-            exit;
+            echo json_encode(['success' => false, 'message' => 'Lỗi phương thức.']); exit;
         }
 
         $current_password = (string)($_POST['current_password'] ?? '');
@@ -215,38 +127,32 @@ class profile extends controllers_customer {
         $confirm_password = (string)($_POST['confirm_password'] ?? '');
 
         if ($current_password === '' || $new_password === '' || $confirm_password === '') {
-            $_SESSION['error'] = 'Vui lòng nhập đầy đủ thông tin đổi mật khẩu.';
-            header('Location: /web_qlsp/profile');
-            exit;
+            echo json_encode(['success' => false, 'message' => 'Vui lòng nhập đầy đủ thông tin đổi mật khẩu.']); exit;
         }
 
         if ($new_password !== $confirm_password) {
-            $_SESSION['error'] = 'Mật khẩu mới và xác nhận mật khẩu không khớp.';
-            header('Location: /web_qlsp/profile');
-            exit;
+            echo json_encode(['success' => false, 'message' => 'Mật khẩu mới và xác nhận mật khẩu không khớp.']); exit;
         }
 
         if (strlen($new_password) < 6) {
-            $_SESSION['error'] = 'Mật khẩu mới phải có ít nhất 6 ký tự.';
-            header('Location: /web_qlsp/profile');
-            exit;
+            echo json_encode(['success' => false, 'message' => 'Mật khẩu mới phải có ít nhất 6 ký tự.']); exit;
         }
 
         $ok = $this->profile_model->user_changePassword($_SESSION['user_id'], $current_password, $new_password);
+        
         if ($ok) {
-            // Nếu user có dùng cookie remember, mật khẩu cũ trong cookie sẽ gây lỗi/auto login sai
+            // Xóa cookie để tránh auto-login sai mật khẩu cũ
             if (isset($_COOKIE['user_password'])) {
                 setcookie('user_password', '', time() - 3600, '/');
             }
-            $_SESSION['success'] = 'Đổi mật khẩu thành công.';
+            echo json_encode(['success' => true, 'message' => 'Đổi mật khẩu thành công.']);
         } else {
-            $_SESSION['error'] = 'Mật khẩu hiện tại không đúng hoặc đổi mật khẩu thất bại.';
+            echo json_encode(['success' => false, 'message' => 'Mật khẩu hiện tại không đúng hoặc lỗi hệ thống.']);
         }
-
-        header('Location: /web_qlsp/profile');
         exit;
     }
 
+    // 4. API TRẢ VỀ QUẬN/HUYỆN/XÃ (Dùng cho form)
     function get_districts($p_code) {
         $districts = $this->provinces_model->districts_selectByProvince($p_code);
         echo '<option value="">Chọn Quận/Huyện</option>';

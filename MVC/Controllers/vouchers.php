@@ -2,55 +2,162 @@
 class vouchers extends controllers
 {
     private $vouchers;
+    
     public function __construct()
     {
         $this->vouchers = $this->model('vouchers_m');
     }
+
+    // Thiết lập Header dùng chung cho API
+    private function setApiHeader() {
+        header('Access-Control-Allow-Origin: *');
+        header('Content-Type: application/json; charset=utf-8');
+    }
+
+    // 1. LUỒNG DÀNH CHO TRÌNH DUYỆT WEB (Chỉ tải giao diện rỗng)
     public function Get_data()
     {
         $this->view('Master', [
-            'Page'          => 'vouchers_v',
-            'vouchers_list' => $this->vouchers->vouchers_selectAll(),
-        ]);
-    }
-    function reset(){
-        $this->view('Master', [
-            'Page'          => 'vouchers_v',
-            'vouchers_list' => $this->vouchers->vouchers_selectAll(),
-        ]);
-    }
-    function search() {
-    
-    if (isset($_POST['btnTimkiem'])) {
-        $search = $_POST['txtSearch'];
-        $vouchers_result = $this->vouchers->vouchers_select_search($search);
-        $this->view('Master', [
-            'Page' => 'vouchers_v',
-            'vouchers_list' => $vouchers_result,
-            'search' => $search
+            'Page' => 'vouchers_v'
         ]);
     }
 
-   
-    else if (isset($_POST['btnXuatExcel'])) {
+    // 2. API: LẤY DANH SÁCH VOUCHERS (Có Tìm kiếm & Lọc)
+    public function api_get_data()
+    {
+        $this->setApiHeader();
         
-        if (!class_exists('PHPExcel')) {
-             echo "<script>alert('Lỗi: Thư viện PHPExcel chưa được nạp.'); window.history.back();</script>";
-             return;
+        $search = isset($_GET['q']) ? trim($_GET['q']) : '';
+        $filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
+
+        $data = [];
+        $result = $this->vouchers->vouchers_select_search($search);
+
+        if ($result && mysqli_num_rows($result) > 0) {
+            $now = time();
+            while ($row = mysqli_fetch_assoc($result)) {
+                // Tính toán trạng thái thực tế
+                $start = strtotime($row['start_date']);
+                $end = strtotime($row['end_date']);
+                $real_status = '';
+
+                if ($row['status'] == 0) {
+                    $real_status = 'hidden';
+                } elseif ($row['used_count'] >= $row['usage_limit']) {
+                    $real_status = 'empty';
+                } elseif ($now > $end) {
+                    $real_status = 'expired';
+                } elseif ($now < $start) {
+                    $real_status = 'upcoming';
+                } else {
+                    $real_status = 'running';
+                }
+
+                // Lọc dữ liệu theo yêu cầu
+                if ($filter != 'all' && $filter != $real_status) {
+                    continue; 
+                }
+
+                // Gắn thêm thuộc tính để JS dễ xử lý
+                $row['real_status'] = $real_status;
+                $row['start_timestamp'] = $start;
+                $row['end_timestamp'] = $end;
+                $data[] = $row;
+            }
         }
+        
+        echo json_encode(['success' => true, 'data' => $data]);
+        exit;
+    }
+
+    // 3. API: THÊM VOUCHER MỚI
+    public function api_add()
+    {
+        $this->setApiHeader();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Lỗi phương thức']); exit;
+        }
+
+        $code = $_POST['code'] ?? '';
+        $description = $_POST['description'] ?? '';
+        $discount_type = $_POST['type'] ?? 'fixed';
+        $discount_value = $_POST['value'] ?? 0;
+        $max_discount_amount = !empty($_POST['max_discount']) ? $_POST['max_discount'] : 'NULL';
+        $min_order_value = !empty($_POST['min_order']) ? $_POST['min_order'] : 0;
+        $usage_limit = !empty($_POST['usage_limit']) ? $_POST['usage_limit'] : 100;
+        $start_date = $_POST['start_date'] ?? '';
+        $end_date = $_POST['end_date'] ?? '';
+        $status = isset($_POST['status']) ? $_POST['status'] : 1;
+
+        if (empty($code)) {
+            echo json_encode(['success' => false, 'message' => 'Mã voucher không được để trống']); exit;
+        }
+        if (!empty($start_date) && !empty($end_date) && $end_date < $start_date) {
+            echo json_encode(['success' => false, 'message' => 'Ngày kết thúc phải sau ngày bắt đầu']); exit;
+        }
+        if ($discount_type == 'percent' && $discount_value > 100) {
+            echo json_encode(['success' => false, 'message' => 'Giảm theo phần trăm không được vượt quá 100%']); exit;
+        }
+
+        $kq = $this->vouchers->vouchers_insert($code, $description, $discount_type, $discount_value, $max_discount_amount, $min_order_value, $usage_limit, $start_date, $end_date, $status);
+
+        echo json_encode(['success' => $kq, 'message' => $kq ? 'Thêm voucher thành công' : 'Lỗi thêm dữ liệu']);
+        exit;
+    }
+
+    // 4. API: CẬP NHẬT VOUCHER
+    public function api_update()
+    {
+        $this->setApiHeader();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Lỗi phương thức']); exit;
+        }
+
+        $id = $_POST['id'] ?? '';
+        $usage_limit = $_POST['usage_limit'] ?? 0;
+        $start_date = $_POST['start_date'] ?? '';
+        $end_date = $_POST['end_date'] ?? '';
+        $discount_value = $_POST['value'] ?? 0;
+        $min_order_value = $_POST['min_order'] ?? 0;
+        $max_discount_amount = !empty($_POST['max_discount']) ? $_POST['max_discount'] : 'NULL';
+        $status = $_POST['status'] ?? 1;
+
+        if (empty($id)) {
+            echo json_encode(['success' => false, 'message' => 'Thiếu thông tin cập nhật']); exit;
+        }
+        if (!empty($start_date) && !empty($end_date) && $end_date < $start_date) {
+            echo json_encode(['success' => false, 'message' => 'Ngày kết thúc phải sau ngày bắt đầu']); exit;
+        }
+
+        $kq = $this->vouchers->vouchers_update($id, $usage_limit, $start_date, $end_date, $discount_value, $min_order_value, $max_discount_amount, $status);
+        echo json_encode(['success' => $kq, 'message' => $kq ? 'Cập nhật voucher thành công' : 'Lỗi cập nhật dữ liệu']);
+        exit;
+    }
+
+    // 5. API: XÓA VOUCHER
+    public function api_delete($id)
+    {
+        $this->setApiHeader();
+        $kq = $this->vouchers->vouchers_delete($id);
+        echo json_encode(['success' => $kq, 'message' => $kq ? 'Đã xóa voucher' : 'Lỗi khi xóa']);
+        exit;
+    }
+
+    // 6. XUẤT EXCEL (Tải trực tiếp)
+    public function export_excel()
+    {
+        $keyword = $_GET['q'] ?? '';
+        
+        if (!class_exists('PHPExcel')) require_once "./MVC/Bridge.php";
 
         $objExcel = new PHPExcel();
         $objExcel->setActiveSheetIndex(0);
         $sheet = $objExcel->getActiveSheet()->setTitle('Danh_Sach_Vouchers');
 
-        // 1. Tiêu đề cột
         $rowCount = 1;
-        $columns = [
-            'A'=>'ID', 'B'=>'Mã Code', 'C'=>'Mô tả', 'D'=>'Loại giảm',
-            'E'=>'Giá trị', 'F'=>'Giảm tối đa', 'G'=>'Đơn tối thiểu',
-            'H'=>'Tổng giới hạn', 'I'=>'Đã dùng', 
-            'J'=>'Ngày bắt đầu', 'K'=>'Ngày kết thúc', 'L'=>'Trạng thái'
-        ];
+        $columns = ['A'=>'ID', 'B'=>'Mã Code', 'C'=>'Mô tả', 'D'=>'Loại giảm', 'E'=>'Giá trị', 'F'=>'Giảm tối đa', 'G'=>'Đơn tối thiểu', 'H'=>'Tổng giới hạn', 'I'=>'Đã dùng', 'J'=>'Ngày bắt đầu', 'K'=>'Ngày kết thúc', 'L'=>'Trạng thái'];
 
         foreach ($columns as $col => $title) {
             $sheet->setCellValue($col . $rowCount, $title);
@@ -59,14 +166,12 @@ class vouchers extends controllers
             $sheet->getStyle($col . $rowCount)->getFill()->setFillType(PHPExcel_Style_Fill::FILL_SOLID)->getStartColor()->setARGB('FFFFE0B2');
         }
 
-        $keyword = $_POST['txtSearch'] ?? '';
         $data = $this->vouchers->vouchers_select_search($keyword);
 
         if ($data && mysqli_num_rows($data) > 0) {
             while ($row = mysqli_fetch_array($data)) {
                 $rowCount++;
                 
-                // Đổ dữ liệu cơ bản
                 $sheet->setCellValue('A'.$rowCount, $row['id']);
                 $sheet->setCellValue('B'.$rowCount, $row['code']);
                 $sheet->setCellValue('C'.$rowCount, $row['description']);
@@ -86,43 +191,18 @@ class vouchers extends controllers
                 $sheet->setCellValue('J'.$rowCount, $row['start_date']);
                 $sheet->setCellValue('K'.$rowCount, $row['end_date']);
 
-               
                 $now = time();
                 $start = strtotime($row['start_date']);
                 $end = strtotime($row['end_date']);
                 
-                $text_status = '';
-                $color_status = '000000'; // Mặc định màu đen
-
-               
-                if ($row['status'] == 0) {
-                    $text_status = 'Đang ẩn';
-                    $color_status = '808080'; // Màu xám
-                } 
-              
-                elseif ($row['used_count'] >= $row['usage_limit']) {
-                    $text_status = 'Hết lượt';
-                    $color_status = '000000'; // Màu đen
-                } 
-                
-                elseif ($now > $end) {
-                    $text_status = 'Đã kết thúc';
-                    $color_status = 'FF0000'; // Màu đỏ
-                } 
-                
-                elseif ($now < $start) {
-                    $text_status = 'Sắp diễn ra';
-                    $color_status = 'FFA500'; // Màu cam
-                } 
-               
-                else {
-                    $text_status = 'Đang chạy'; // Hoặc 'Đang hoạt động'
-                    $color_status = '008000'; // Màu xanh lá
-                }
+                $text_status = ''; $color_status = '000000';
+                if ($row['status'] == 0) { $text_status = 'Đang ẩn'; $color_status = '808080'; } 
+                elseif ($row['used_count'] >= $row['usage_limit']) { $text_status = 'Hết lượt'; $color_status = '000000'; } 
+                elseif ($now > $end) { $text_status = 'Đã kết thúc'; $color_status = 'FF0000'; } 
+                elseif ($now < $start) { $text_status = 'Sắp diễn ra'; $color_status = 'FFA500'; } 
+                else { $text_status = 'Đang chạy'; $color_status = '008000'; }
 
                 $sheet->setCellValue('L'.$rowCount, $text_status);
-                
-                // Tô màu chữ cho đẹp
                 $sheet->getStyle('L'.$rowCount)->getFont()->getColor()->setARGB($color_status);
             }
         } else {
@@ -131,14 +211,9 @@ class vouchers extends controllers
             $sheet->mergeCells('A'.$rowCount.':L'.$rowCount);
         }
 
-        // Căn chỉnh độ rộng
-        foreach (range('A', 'L') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
+        foreach (range('A', 'L') as $col) { $sheet->getColumnDimension($col)->setAutoSize(true); }
 
         if (ob_get_length()) ob_end_clean();
-        
-        // Tên file
         $filename = "Vouchers_" . date('d-m-Y') . ".xlsx";
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -149,245 +224,64 @@ class vouchers extends controllers
         $objWriter->save('php://output');
         exit;
     }
-}
-    public function thongBao($kq)
+
+    // 7. API: IMPORT EXCEL
+    public function api_import()
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
+        $this->setApiHeader();
+
+        if (!isset($_FILES['fileImport']) || empty($_FILES['fileImport']['tmp_name'])) {
+            echo json_encode(['success' => false, 'message' => 'Vui lòng chọn file Excel!']); exit;
         }
 
-        if ($kq) {
-            $_SESSION['status_msg'] = "success";
-        } else {
-            $_SESSION['status_msg'] = "error";
-        }
-
-        header("Location: /web_qlsp/vouchers");
-        exit();
-    }
-
-    public function add()
-    {
-        if (isset($_POST['btnAddVoucher'])) {
-            // 1. Lấy dữ liệu từ Form
-            $code        = $_POST['code'];
-            $description = $_POST['description']; // Mô tả
-
-            $discount_type  = $_POST['type']; // 'fixed' hoặc 'percent'
-            $discount_value = $_POST['value'];
-
-           
-            $max_discount_amount = ! empty($_POST['max_discount']) ? $_POST['max_discount'] : 'NULL';
-            $min_order_value     = ! empty($_POST['min_order']) ? $_POST['min_order'] : 0;
-
-            $usage_limit = ! empty($_POST['usage_limit']) ? $_POST['usage_limit'] : 100; // Mặc định 100 nếu bỏ trống
-
-            $start_date = $_POST['start_date'];
-            $end_date   = $_POST['end_date'];
-
-            $status = isset($_POST['status']) ? $_POST['status'] : 1;
-
-            // 2. Validate dữ liệu (Kiểm tra lỗi)
-            // Kiểm tra mã rỗng
-            if (empty($code)) {
-                echo "<script>alert('Mã voucher không được để trống'); window.history.back();</script>";
-                return;
-            }
-
-            if (! empty($start_date) && ! empty($end_date) && $end_date < $start_date) {
-                echo "<script>alert('Ngày kết thúc phải lớn hơn ngày bắt đầu'); window.history.back();</script>";
-                return;
-            }
-
-            if ($discount_type == 'percent' && $discount_value > 100) {
-                echo "<script>alert('Giảm giá phần trăm không được quá 100%'); window.history.back();</script>";
-                return;
-            }
-
-            $kq = $this->vouchers->vouchers_insert(
-                $code,
-                $description,
-                $discount_type,
-                $discount_value,
-                $max_discount_amount,
-                $min_order_value,
-                $usage_limit,
-                $start_date,
-                $end_date,
-                $status
-            );
-
-            // 4. Thông báo kết quả
-            $this->thongBao($kq);
-        }
-    }
-    public function delete($id)
-    {
-        $kq = $this->vouchers->vouchers_delete($id);
-        $this->thongBao($kq);
-    }
-    public function update()
-    {
-        if (isset($_POST['btnUpdateVoucher'])) {
-                                                 // Lấy dữ liệu từ Form Modal
-            $id                  = $_POST['id']; // ID lấy từ input hidden
-            $usage_limit         = $_POST['usage_limit'];
-            $start_date          = $_POST['start_date'];
-            $end_date            = $_POST['end_date'];
-            $discount_value      = $_POST['value'];        // name="value" trong form
-            $min_order_value     = $_POST['min_order'];    // name="min_order" trong form
-            $max_discount_amount = $_POST['max_discount']; // name="max_discount" trong form
-            $status              = $_POST['status'];
-
-            // Gọi hàm Model vừa viết ở trên
-            $kq = $this->vouchers->vouchers_update(
-                $id,
-                $usage_limit,
-                $start_date,
-                $end_date,
-                $discount_value,
-                $min_order_value,
-                $max_discount_amount,
-                $status
-            );
-
-            // Thông báo và chuyển hướng
-            $this->thongBao($kq);
-        }
-    }
-   function import() {
-    // Kiểm tra nút bấm và file
-    if (isset($_POST['btnImport']) && isset($_FILES['fileImport'])) {
         $file = $_FILES['fileImport']['tmp_name'];
 
-        // 1. Kiểm tra file rỗng
-        if (empty($file)) {
-            echo "<script>alert('Vui lòng chọn file Excel!'); window.history.back();</script>";
-            return;
-        }
-
-        // 2. Kiểm tra thư viện PHPExcel
-        if (!class_exists('PHPExcel')) {
-             echo "<script>alert('Lỗi: Thư viện PHPExcel chưa được nạp. Hãy kiểm tra lại file bridge.php'); window.history.back();</script>";
-             return;
-        }
-
         try {
-            // 3. Đọc file Excel
+            require_once __DIR__ . '/../../Public/Classes/PHPExcel/IOFactory.php';
             $objReader = PHPExcel_IOFactory::createReaderForFile($file);
-            $objReader->setReadDataOnly(true);
             $objExcel = $objReader->load($file);
-            // Lấy Sheet đầu tiên
             $sheetData = $objExcel->getActiveSheet()->toArray(null, true, true, true);
 
             $countSuccess = 0;
             $countFail = 0;
-            $countDuplicate = 0;
 
-            // 4. Duyệt dòng (Từ dòng 2 trở đi)
             for ($i = 2; $i <= count($sheetData); $i++) {
+                $code = trim($sheetData[$i]["B"] ?? '');
+                if (empty($code) || strtolower($code) == 'mã code') continue; 
+
+                $description    = $sheetData[$i]["C"] ?? '';
+                $type_raw       = $sheetData[$i]["D"] ?? ''; 
+                $discount_value = $sheetData[$i]["E"] ?? 0;
+                $max_raw        = $sheetData[$i]["F"] ?? ''; 
+                $min_order      = $sheetData[$i]["G"] ?? 0;
+                $usage_limit    = $sheetData[$i]["H"] ?? 0;
                 
-                // Lấy Mã Code ở cột B
-                $code = trim($sheetData[$i]["B"]);
+                $start_raw      = $sheetData[$i]["J"] ?? '';
+                $end_raw        = $sheetData[$i]["K"] ?? '';
+                $status_raw     = $sheetData[$i]["L"] ?? ''; 
 
-               
-                if (empty($code) || $code == 'Mã Code' || $code == 'Mã code') {
-                    continue; 
-                }
-
-                // --- LẤY DỮ LIỆU CÁC CỘT KHÁC ---
-                $description    = $sheetData[$i]["C"];
-                $type_raw       = $sheetData[$i]["D"]; // VD: "Theo %"
-                $discount_value = $sheetData[$i]["E"];
-                $max_raw        = $sheetData[$i]["F"]; 
-                $min_order      = $sheetData[$i]["G"];
-                $usage_limit    = $sheetData[$i]["H"];
-                
-                // Cột J, K là ngày tháng
-                $start_raw      = $sheetData[$i]["J"];
-                $end_raw        = $sheetData[$i]["K"];
-                
-                $status_raw     = $sheetData[$i]["L"]; // VD: "Hoạt động"
-
-                // --- XỬ LÝ DỮ LIỆU (MAPPING) ---
-
-                // 1. Loại giảm
                 $discount_type = (trim($type_raw) == 'Theo %') ? 'percent' : 'fixed';
-
-                if (empty($max_raw)) {
-                    $max_discount_amount = "NULL"; 
-                } else {
-                  
-                    $max_discount_amount = str_replace(',', '', $max_raw);
-                }
-
-                // 3. Xử lý Min Order & Value (Loại bỏ dấu phẩy)
+                $max_discount_amount = empty($max_raw) ? "NULL" : str_replace(',', '', $max_raw);
                 $min_order_value = empty($min_order) ? 0 : str_replace(',', '', $min_order);
                 $discount_value  = str_replace(',', '', $discount_value);
                 $usage_limit     = str_replace(',', '', $usage_limit);
 
-                // 4. Xử lý Ngày tháng (Quan trọng)
-               
-                if (is_numeric($start_raw)) {
-                    $start_date = date('Y-m-d H:i:s', PHPExcel_Shared_Date::ExcelToPHP($start_raw));
-                } else {
-                    // Nếu trả về Text (2025-01-01...) -> Dùng strtotime
-                    $start_date = date('Y-m-d H:i:s', strtotime($start_raw));
-                }
-
-                if (is_numeric($end_raw)) {
-                    $end_date = date('Y-m-d H:i:s', PHPExcel_Shared_Date::ExcelToPHP($end_raw));
-                } else {
-                    $end_date = date('Y-m-d H:i:s', strtotime($end_raw));
-                }
-
-                // 5. Trạng thái
+                $start_date = is_numeric($start_raw) ? date('Y-m-d H:i:s', PHPExcel_Shared_Date::ExcelToPHP($start_raw)) : date('Y-m-d H:i:s', strtotime($start_raw));
+                $end_date = is_numeric($end_raw) ? date('Y-m-d H:i:s', PHPExcel_Shared_Date::ExcelToPHP($end_raw)) : date('Y-m-d H:i:s', strtotime($end_raw));
                 $status = (trim($status_raw) == 'Hoạt động') ? 1 : 0;
 
-                
-                $kq = $this->vouchers->vouchers_insert(
-                    $code,
-                    $description,
-                    $discount_type,
-                    $discount_value,
-                    $max_discount_amount,
-                    $min_order_value,
-                    $usage_limit,
-                    $start_date,
-                    $end_date,
-                    $status
-                );
+                $kq = $this->vouchers->vouchers_insert($code, $description, $discount_type, $discount_value, $max_discount_amount, $min_order_value, $usage_limit, $start_date, $end_date, $status);
 
-                if ($kq) {
-                    $countSuccess++;
-                } else {
-                    $countFail++;
-                }
+                if ($kq) $countSuccess++; else $countFail++;
             }
 
-            // 5. HIỂN THỊ KẾT QUẢ
-            echo "
-            <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
-            <script>
-                window.onload = function() {
-                    Swal.fire({
-                        title: 'Hoàn tất nhập dữ liệu!',
-                        html: '<div class=\"text-start\">' +
-                              '<p class=\"text-success mb-1\">✅ Thành công: <b>$countSuccess</b> dòng</p>' +
-                              '<p class=\"text-danger mb-0\">❌ Thất bại (hoặc trùng mã): <b>$countFail</b> dòng</p>' +
-                              '</div>',
-                        icon: 'info',
-                        confirmButtonText: 'Đã hiểu',
-                        confirmButtonColor: '#3085d6'
-                    }).then((result) => {
-                        window.location.href = '/web_qlsp/vouchers';
-                    });
-                };
-            </script>";
+            echo json_encode(['success' => true, 'message' => "Đã nhập thành công $countSuccess mã. Lỗi/trùng: $countFail mã."]);
+            exit;
 
         } catch (Exception $e) {
-            echo "<script>alert('Lỗi xử lý file Excel: " . $e->getMessage() . "'); window.history.back();</script>";
+            echo json_encode(['success' => false, 'message' => "Lỗi xử lý file Excel: " . $e->getMessage()]);
+            exit;
         }
     }
 }
-}
+?>

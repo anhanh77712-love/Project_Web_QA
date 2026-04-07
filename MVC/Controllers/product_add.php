@@ -2,166 +2,190 @@
 class product_add extends controllers
 {
     private $prd_add;
+    
     function __construct()
     {
         $this->prd_add = $this->model("product_m");
     }
+
+    // Thiết lập Header dùng chung cho API
+    private function setApiHeader() {
+        header('Access-Control-Allow-Origin: *');
+        header('Content-Type: application/json; charset=utf-8');
+    }
+
+    // 1. LUỒNG DÀNH CHO TRÌNH DUYỆT WEB (Chỉ tải giao diện rỗng)
     function Get_data()
     {
         $this->view('Master', [
-            'Page' => 'product_add_v',
-            'categories_list' => $this->prd_add->categories_selectAll(),
-            'collections_list' => $this->prd_add->collections_selectAll(),
-            'products_list' => $this->prd_add->products_select('', '')
+            'Page' => 'product_add_v'
         ]);
     }
-    function thongBao($kq){
-        if (session_status() === PHP_SESSION_NONE) session_start();
-        if ($kq) {
-            $_SESSION['status_msg'] = "success";
-        } else {
-            $_SESSION['status_msg'] = "error";
+
+    // 2. API: Lấy dữ liệu khởi tạo cho các thẻ <select> (Danh mục, Bộ sưu tập, Sản phẩm)
+    function api_get_form_data() {
+        $this->setApiHeader();
+        
+        // Lấy Danh mục
+        $cats_result = $this->prd_add->categories_selectAll();
+        $categories = [];
+        if ($cats_result && mysqli_num_rows($cats_result) > 0) {
+            while ($row = mysqli_fetch_assoc($cats_result)) { $categories[] = $row; }
         }
-        header("Location: /web_qlsp/product_list");
-        exit();
-    }
-    function Add()
-    {
-        if (isset($_POST['btnLuu'])) {
-            $name = $_POST['name'] ?? '';
-            $slug = $_POST['slug'] ?? '';
-            $category_id = $_POST['category_id'] ?? '';
-            $collection_id = $_POST['collection_id'] ?? '';
-            $description = $_POST['description'] ?? '';
-            $gender = $_POST['gender'] ?? '';
-            $color = $_POST['color'] ?? '';
-            $size = $_POST['size'] ?? '';
-            $cost_price = $_POST['cost_price'] ?? 0;
-            $base_price = $_POST['base_price'] ?? 0;
-            $quantity = $_POST['quantity'] ?? 0;
-            $is_sale = isset($_POST['is_sale']) ? 1 : 0;
 
-            // Validate
-            if (empty($name)) {
-                echo "<script>alert('Tên sản phẩm không được để trống');</script>";
-                return;
-            } else if (empty($base_price)) {
-                echo "<script>alert('Giá bán không được để trống');</script>";
-                return;
-            } else if (empty($cost_price)) {
-                echo "<script>alert('Giá nhập không được để trống');</script>";
-                return;
+        // Lấy Bộ sưu tập
+        $cols_result = $this->prd_add->collections_selectAll();
+        $collections = [];
+        if ($cols_result && mysqli_num_rows($cols_result) > 0) {
+            while ($row = mysqli_fetch_assoc($cols_result)) { $collections[] = $row; }
+        }
+
+        // Lấy Sản phẩm (Cho tab thêm Variant)
+        $prods_result = $this->prd_add->products_select('', '');
+        $products = [];
+        if ($prods_result && mysqli_num_rows($prods_result) > 0) {
+            while ($row = mysqli_fetch_assoc($prods_result)) { 
+                $products[] = ['id' => $row['id'], 'name' => $row['name']]; 
             }
+        }
 
-            // Upload ảnh đại diện
-            $thumbnail = '';
-            if (isset($_FILES['thumbnail']) && $_FILES['thumbnail']['error'] == 0) {
+        echo json_encode([
+            'success' => true, 
+            'categories' => $categories, 
+            'collections' => $collections, 
+            'products' => $products
+        ]);
+        exit;
+    }
+
+    // API: Thêm sản phẩm mới + Variant đầu tiên
+    function api_add()
+    {
+        $this->setApiHeader();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Lỗi phương thức']); exit;
+        }
+
+        $name = $_POST['name'] ?? '';
+        $slug = $_POST['slug'] ?? '';
+        $category_id = $_POST['category_id'] ?? '';
+        $collection_id = $_POST['collection_id'] ?? '';
+        $description = $_POST['description'] ?? '';
+        $gender = $_POST['gender'] ?? '';
+        $color = $_POST['color'] ?? '';
+        $size = $_POST['size'] ?? '';
+        $cost_price = $_POST['cost_price'] ?? 0;
+        $base_price = $_POST['base_price'] ?? 0;
+        $quantity = $_POST['quantity'] ?? 0;
+        $is_sale = isset($_POST['is_sale']) ? 1 : 0;
+
+        // Validate cơ bản
+        if (empty($name) || empty($base_price) || empty($cost_price)) {
+            echo json_encode(['success' => false, 'message' => 'Vui lòng điền đủ Tên sản phẩm, Giá nhập và Giá bán']); exit;
+        }
+
+        // Upload ảnh đại diện
+        $thumbnail = '';
+        if (isset($_FILES['thumbnail']) && $_FILES['thumbnail']['error'] == 0) {
+            $target_dir = $_SERVER['DOCUMENT_ROOT'] . "/web_qlsp/Public/Picture/";
+            if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
+            $file_name = time() . '_' . basename($_FILES["thumbnail"]["name"]);
+            if (move_uploaded_file($_FILES["thumbnail"]["tmp_name"], $target_dir . $file_name)) {
+                $thumbnail = $file_name;
+            }
+        }
+
+        // Insert sản phẩm và variant
+        $result = $this->prd_add->products_insert(
+            $name, $slug, $category_id, $collection_id, $description, 
+            $thumbnail, $cost_price, $base_price, $color, $size, $quantity, $is_sale, $gender
+        );
+
+        if ($result && is_array($result)) {
+            $product_id = $result['product_id'];
+            $variant_id = $result['variant_id'];
+
+            // Upload ảnh chi tiết và liên kết với variant
+            if (isset($_FILES['detail_images']) && count($_FILES['detail_images']['name']) > 0 && $_FILES['detail_images']['name'][0] != '') {
+                $files = $_FILES['detail_images'];
                 $target_dir = $_SERVER['DOCUMENT_ROOT'] . "/web_qlsp/Public/Picture/";
-                $file_name = time() . '_' . basename($_FILES["thumbnail"]["name"]);
-                if (move_uploaded_file($_FILES["thumbnail"]["tmp_name"], $target_dir . $file_name)) {
-                    $thumbnail = $file_name;
-                }
-            }
-
-            // Insert sản phẩm và variant, truyền thêm gender
-            $result = $this->prd_add->products_insert(
-                $name, $slug, $category_id, $collection_id, $description, 
-                $thumbnail, $cost_price, $base_price, $color, $size, $quantity, $is_sale, $gender
-            );
-
-            if ($result && is_array($result)) {
-                $product_id = $result['product_id'];
-                $variant_id = $result['variant_id'];
-
-                // Upload ảnh chi tiết và liên kết với variant
-                if (isset($_FILES['detail_images']) && count($_FILES['detail_images']['name']) > 0 && $_FILES['detail_images']['name'][0] != '') {
-                    $files = $_FILES['detail_images'];
-                    $target_dir = $_SERVER['DOCUMENT_ROOT'] . "/web_qlsp/Public/Picture/";
-                    
-                    for ($i = 0; $i < count($files['name']); $i++) {
-                        if (!empty($files['name'][$i]) && $files['error'][$i] == 0) {
-                            $file_name = time() . '_' . $i . '_' . basename($files["name"][$i]);
-                            if (move_uploaded_file($files["tmp_name"][$i], $target_dir . $file_name)) {
-                                // Insert ảnh chi tiết liên kết với variant_id
-                                $this->prd_add->product_images_insert($variant_id, $file_name, 0);
-                            }
+                
+                for ($i = 0; $i < count($files['name']); $i++) {
+                    if (!empty($files['name'][$i]) && $files['error'][$i] == 0) {
+                        $file_name = time() . '_' . $i . '_' . basename($files["name"][$i]);
+                        if (move_uploaded_file($files["tmp_name"][$i], $target_dir . $file_name)) {
+                            $this->prd_add->product_images_insert($variant_id, $file_name, 0);
                         }
                     }
                 }
-                
-                $this->thongBao(true);
-            } else {
-                $this->thongBao(false);
             }
+            
+            echo json_encode(['success' => true, 'message' => 'Tạo sản phẩm mới thành công!']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Lỗi lưu dữ liệu vào Database']);
         }
+        exit;
     }
 
-    function AddVariant()
+    // API: Thêm Variant cho sản phẩm có sẵn
+    function api_add_variant()
     {
-        if (isset($_POST['btnLuu'])) {
-            $product_id = $_POST['product_id'] ?? 0;
-            $color = $_POST['color'] ?? '';
-            $size = $_POST['size'] ?? '';
-            $cost_price = $_POST['cost_price'] ?? 0;
-            $quantity = $_POST['quantity'] ?? 0;
+        $this->setApiHeader();
 
-            // Validate
-            if (empty($product_id)) {
-                echo "<script>alert('Vui lòng chọn sản phẩm');</script>";
-                return;
-            } else if (empty($cost_price)) {
-                echo "<script>alert('Giá nhập không được để trống');</script>";
-                return;
-            }
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Lỗi phương thức']); exit;
+        }
 
-            // Ngăn tạo trùng biến thể (màu + size) cho sản phẩm
-            if ($this->prd_add->variant_exists($product_id, $color, $size)) {
-                echo "<script>alert('Biến thể với màu và kích cỡ này đã tồn tại cho sản phẩm được chọn.'); history.back();</script>";
-                return;
-            }
+        $product_id = $_POST['product_id'] ?? 0;
+        $color = $_POST['color'] ?? '';
+        $size = $_POST['size'] ?? '';
+        $cost_price = $_POST['cost_price'] ?? 0;
+        $quantity = $_POST['quantity'] ?? 0;
 
-            // Insert variant mới
-            $variant_id = $this->prd_add->variant_insert(
-                $product_id, $color, $size, $cost_price, $quantity
-            );
+        if (empty($product_id) || empty($cost_price)) {
+            echo json_encode(['success' => false, 'message' => 'Vui lòng chọn sản phẩm và nhập giá']); exit;
+        }
 
-            if ($variant_id) {
-                // Upload ảnh chi tiết cho variant mới
-                if (isset($_FILES['detail_images']) && count($_FILES['detail_images']['name']) > 0 && $_FILES['detail_images']['name'][0] != '') {
-                    $files = $_FILES['detail_images'];
-                    $target_dir = $_SERVER['DOCUMENT_ROOT'] . "/web_qlsp/Public/Picture/";
-                    
-                    for ($i = 0; $i < count($files['name']); $i++) {
-                        if (!empty($files['name'][$i]) && $files['error'][$i] == 0) {
-                            $file_name = time() . '_' . $i . '_' . basename($files["name"][$i]);
-                            if (move_uploaded_file($files["tmp_name"][$i], $target_dir . $file_name)) {
-                                $this->prd_add->product_images_insert($variant_id, $file_name, 0);
-                            }
+        // Ngăn tạo trùng biến thể
+        if ($this->prd_add->variant_exists($product_id, $color, $size)) {
+            echo json_encode(['success' => false, 'message' => 'Biến thể (Màu + Size) này đã tồn tại cho sản phẩm này!']); exit;
+        }
+
+        // Insert variant mới
+        $variant_id = $this->prd_add->variant_insert($product_id, $color, $size, $cost_price, $quantity);
+
+        if ($variant_id) {
+            // Upload ảnh chi tiết
+            if (isset($_FILES['detail_images']) && count($_FILES['detail_images']['name']) > 0 && $_FILES['detail_images']['name'][0] != '') {
+                $files = $_FILES['detail_images'];
+                $target_dir = $_SERVER['DOCUMENT_ROOT'] . "/web_qlsp/Public/Picture/";
+                
+                for ($i = 0; $i < count($files['name']); $i++) {
+                    if (!empty($files['name'][$i]) && $files['error'][$i] == 0) {
+                        $file_name = time() . '_' . $i . '_' . basename($files["name"][$i]);
+                        if (move_uploaded_file($files["tmp_name"][$i], $target_dir . $file_name)) {
+                            $this->prd_add->product_images_insert($variant_id, $file_name, 0);
                         }
                     }
                 }
-                
-                $this->thongBao(true);
-            } else {
-                $this->thongBao(false);
             }
+            
+            echo json_encode(['success' => true, 'message' => 'Đã thêm Variant mới cho sản phẩm!']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Lỗi lưu Variant vào Database']);
         }
+        exit;
     }
 
-    // JSON endpoint: return existing variants for a product
-    function GetVariants()
+    // API: Lấy danh sách biến thể của 1 sản phẩm (Đã có sẵn của bạn, mình chuẩn hóa lại tí)
+    function api_get_variants()
     {
-        header('Content-Type: application/json; charset=utf-8');
-        $product_id = 0;
-        if (isset($_GET['product_id'])) {
-            $product_id = (int)$_GET['product_id'];
-        } else if (isset($_POST['product_id'])) {
-            $product_id = (int)$_POST['product_id'];
-        }
+        $this->setApiHeader();
+        $product_id = isset($_GET['product_id']) ? (int)$_GET['product_id'] : 0;
 
         if ($product_id <= 0) {
-            echo json_encode([ 'variants' => [], 'error' => 'invalid_product_id' ]);
-            return;
+            echo json_encode(['success' => false, 'variants' => []]); return;
         }
 
         $result = $this->prd_add->get_variants_by_product($product_id);
@@ -175,6 +199,8 @@ class product_add extends controllers
                 ];
             }
         }
-        echo json_encode([ 'variants' => $variants ]);
+        echo json_encode(['success' => true, 'variants' => $variants]);
+        exit;
     }
 }
+?>

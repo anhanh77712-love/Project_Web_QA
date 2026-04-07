@@ -2,17 +2,32 @@
 class orders extends controllers {
     private $orders;
     function __construct() {
-        // Gọi hàm khởi tạo của lớp cha
         $this->orders = $this->model('orders_m');
     }
     
+    // Thiết lập Header dùng chung cho API
+    private function setApiHeader() {
+        header('Access-Control-Allow-Origin: *');
+        header('Content-Type: application/json; charset=utf-8');
+    }
+
+    // 1. LUỒNG DÀNH CHO TRÌNH DUYỆT WEB (Chỉ tải giao diện rỗng)
     function Get_data() {
+        $this->view('Master', [
+            'Page' => 'orders_v'
+        ]);
+    }
+    
+    // 2. LUỒNG DÀNH CHO JAVASCRIPT (Lấy danh sách đơn hàng + Lọc)
+    function api_get_data() {
+        $this->setApiHeader();
+        
         $status = isset($_GET['status']) ? $_GET['status'] : 'all';
         $from = isset($_GET['from']) ? trim($_GET['from']) : '';
         $to = isset($_GET['to']) ? trim($_GET['to']) : '';
-        // Server-side safeguard: if both dates provided and out of order, swap
+        
+        // Đảo ngày nếu người dùng chọn ngày bắt đầu lớn hơn ngày kết thúc
         if (!empty($from) && !empty($to)) {
-            // Basic YYYY-MM-DD validation
             $isFromFmt = preg_match('/^\d{4}-\d{2}-\d{2}$/', $from);
             $isToFmt = preg_match('/^\d{4}-\d{2}-\d{2}$/', $to);
             if ($isFromFmt && $isToFmt) {
@@ -22,29 +37,31 @@ class orders extends controllers {
             }
         }
         
-        $this->view('Master', [
-            'Page' => 'orders_v',
-            'orders_list' => $this->orders->orders_selectFiltered($status, $from, $to),
-            'filter_from' => $from,
-            'filter_to' => $to
-        ]);
+        $result = $this->orders->orders_selectFiltered($status, $from, $to);
+        $data = [];
+        
+        if ($result && mysqli_num_rows($result) > 0) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $data[] = $row;
+            }
+        }
+        
+        echo json_encode(['success' => true, 'data' => $data]);
+        exit;
     }
     
-    // Xem chi tiết đơn hàng
+    // API: Xem chi tiết đơn hàng
     function view_detail() {
+        $this->setApiHeader();
+        
         if (isset($_GET['id'])) {
             $order_id = $_GET['id'];
-            
-            // Lấy thông tin đơn hàng
             $order = $this->orders->order_getById($order_id);
             
             if (!$order) {
-                header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'message' => 'Không tìm thấy đơn hàng']);
-                return;
+                echo json_encode(['success' => false, 'message' => 'Không tìm thấy đơn hàng']); return;
             }
             
-            // Lấy danh sách sản phẩm từ bảng order_items
             $order_items = $this->orders->orderItems_getByOrderId($order_id);
             $items_array = [];
             
@@ -55,41 +72,34 @@ class orders extends controllers {
                         'name' => $item['product_name'],
                         'price' => $item['price'],
                         'image' => $item['product_image'],
-                        'size' => isset($item['size']) ? $item['size'] : null,
-                        'color' => isset($item['color']) ? $item['color'] : null,
-                        'variant_id' => isset($item['variant_id']) ? $item['variant_id'] : null,
+                        'size' => $item['size'] ?? null,
+                        'color' => $item['color'] ?? null,
+                        'variant_id' => $item['variant_id'] ?? null,
                         'quantity' => $item['quantity'],
                         'subtotal' => $item['total']
                     ];
                 }
             }
             
-            // Trả về JSON
-            header('Content-Type: application/json');
-            echo json_encode([
-                'success' => true,
-                'order' => $order,
-                'items' => $items_array
-            ]);
+            echo json_encode(['success' => true, 'order' => $order, 'items' => $items_array]);
         } else {
-            header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Không tìm thấy đơn hàng']);
         }
+        exit;
     }
     
-    // Cập nhật trạng thái đơn hàng
+    // API: Cập nhật trạng thái đơn hàng
     function update_status() {
+        $this->setApiHeader();
+        
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $order_id = $_POST['order_id'] ?? null;
             $new_status = $_POST['status'] ?? null;
             
             if ($order_id && $new_status) {
-                // Lấy đơn hàng hiện tại để kiểm tra status trước và subtotal
                 $order = $this->orders->order_getById($order_id);
                 if (!$order) {
-                    header('Content-Type: application/json');
-                    echo json_encode(['success' => false, 'message' => 'Không tìm thấy đơn hàng']);
-                    return;
+                    echo json_encode(['success' => false, 'message' => 'Không tìm thấy đơn hàng']); return;
                 }
 
                 $old_status = $order['status'] ?? 'pending';
@@ -97,61 +107,41 @@ class orders extends controllers {
                 $user_id = $order['user_id'] ?? null;
                 $message = 'Cập nhật trạng thái thành công';
 
-                // Nếu chuyển sang hoàn thành và chưa hoàn thành trước đó thì cộng điểm
                 if ($new_status === 'completed' && $old_status !== 'completed') {
                     $earned = max(0, intval($subtotal / 1000));
-                    $pointsResult = true;
                     if (!empty($user_id)) {
-                        $pointsResult = $this->orders->user_addPoints($user_id, $earned);
+                        $this->orders->user_addPoints($user_id, $earned);
                     }
-                    // Lưu điểm đã cộng vào đơn hàng để tham chiếu
                     $result = $this->orders->order_updateStatusWithPoints($order_id, $new_status, $earned);
-                    header('Content-Type: application/json');
-                    if ($result) {
-                        echo json_encode(['success' => true, 'message' => $message]);
-                    } else {
-                        echo json_encode(['success' => false, 'message' => 'Cập nhật thất bại']);
-                    }
+                    echo json_encode(['success' => $result, 'message' => $result ? $message : 'Cập nhật thất bại']);
                     return;
                 }
 
-                // Trường hợp các trạng thái khác: chỉ cập nhật
                 $result = $this->orders->order_updateStatus($order_id, $new_status);
-                header('Content-Type: application/json');
-                if ($result) {
-                    echo json_encode(['success' => true, 'message' => $message]);
-                } else {
-                    echo json_encode(['success' => false, 'message' => 'Cập nhật thất bại']);
-                }
+                echo json_encode(['success' => $result, 'message' => $result ? $message : 'Cập nhật thất bại']);
             } else {
-                header('Content-Type: application/json');
                 echo json_encode(['success' => false, 'message' => 'Thiếu thông tin']);
             }
         }
+        exit;
     }
     
-    // Xóa đơn hàng
+    // API: Xóa đơn hàng
     function delete_order() {
+        $this->setApiHeader();
+        
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $order_id = $_POST['order_id'] ?? null;
-            
             if ($order_id) {
-                // Xóa các items của đơn hàng trước
-                $delete_items = $this->orders->orderItems_deleteByOrderId($order_id);
-                
-                // Sau đó xóa đơn hàng
+                $this->orders->orderItems_deleteByOrderId($order_id);
                 $delete_order = $this->orders->order_delete($order_id);
                 
-                header('Content-Type: application/json');
-                if ($delete_order) {
-                    echo json_encode(['success' => true, 'message' => 'Xóa đơn hàng thành công']);
-                } else {
-                    echo json_encode(['success' => false, 'message' => 'Xóa đơn hàng thất bại']);
-                }
+                echo json_encode(['success' => $delete_order, 'message' => $delete_order ? 'Xóa đơn hàng thành công' : 'Xóa đơn hàng thất bại']);
             } else {
-                header('Content-Type: application/json');
                 echo json_encode(['success' => false, 'message' => 'Thiếu mã đơn hàng']);
             }
         }
+        exit;
     }
 }
+?>

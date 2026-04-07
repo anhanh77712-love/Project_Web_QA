@@ -10,166 +10,190 @@ class product_list_customer extends controllers_customer {
         $this->home_model = $this->model('home_m');
     }
     
+    // 1. CHỈ TẢI GIAO DIỆN
     function Get_data() {
-        // Lấy filter từ URL
-        $category = isset($_GET['category']) ? trim($_GET['category']) : '';
-        $collection = isset($_GET['collection']) ? trim($_GET['collection']) : '';
-        $price_range = isset($_GET['price']) ? trim($_GET['price']) : '';
-        $sort = isset($_GET['sort']) ? trim($_GET['sort']) : 'default';
-        $search = isset($_GET['search']) ? trim($_GET['search']) : '';
-        $filter = isset($_GET['filter']) ? trim($_GET['filter']) : '';
-        $sale = isset($_GET['sale']) ? intval($_GET['sale']) : 0;
-        
-        // Debug - Xem giá trị nhận được
-        echo "<!-- Debug: Category = " . htmlspecialchars($category) . " -->";
-        echo "<!-- Debug: Price = " . htmlspecialchars($price_range) . " -->";
-        echo "<!-- Debug: Sort = " . htmlspecialchars($sort) . " -->";
-        
-        // Xử lý price_range (format: min-max)
-        $min_price = 0;
-        $max_price = 999999999;
-        if($price_range) {
-            $price_parts = explode('-', $price_range);
-            if(count($price_parts) == 2) {
-                $min_price = intval($price_parts[0]);
-                $max_price = intval($price_parts[1]);
-            }
-        }
-        
-        // Nếu là SALE: lấy cấu hình flash_sale từ home_sections và lọc theo collection
-        if($sale === 1) {
-            $products = null;
-            $flashSlug = '';
-            $sections = $this->home_model->sections_getActive();
-            if($sections && mysqli_num_rows($sections) > 0) {
-                mysqli_data_seek($sections, 0);
-                while($sec = mysqli_fetch_assoc($sections)) {
-                    if(strtolower($sec['section_type']) === 'flash_sale' && intval($sec['status']) === 1) {
-                        $collectionId = intval($sec['collection_id']);
-                        if($collectionId > 0) {
-                            $flashSlug = $this->home_model->collection_getSlug($collectionId);
-                        }
-                        break;
-                    }
-                }
-            }
-
-            if($flashSlug) {
-                if($category && $price_range) {
-                    $products = $this->prd_list->products_selectByCollectionCategoryAndPrice($flashSlug, $category, $min_price, $max_price, $sort);
-                    echo "<!-- Debug: SALE + Category + Price -->";
-                } elseif($category) {
-                    $products = $this->prd_list->products_selectByCollectionAndCategory($flashSlug, $category, $sort);
-                    echo "<!-- Debug: SALE + Category -->";
-                } elseif($price_range) {
-                    $products = $this->prd_list->products_selectByCollectionAndPriceRange($flashSlug, $min_price, $max_price, $sort);
-                    echo "<!-- Debug: SALE + Price -->";
-                } else {
-                    $products = $this->prd_list->products_selectByCollection($flashSlug, $sort);
-                    echo "<!-- Debug: SALE only (collection) -->";
-                }
-            }
-
-            if(!$products) {
-                // Fallback nếu không có cấu hình flash_sale
-                $products = $this->prd_list->products_selectAll($sort);
-                echo "<!-- Debug: SALE fallback to all products -->";
-            }
-        }
-
-        // Lấy sản phẩm theo filter khác (ưu tiên kết hợp)
-        elseif($filter === 'bestseller' && $category && $price_range) {
-            // Sản phẩm bán chạy + category + giá
-            $products = $this->prd_list->products_selectBestsellerByCategoryAndPrice($category, $min_price, $max_price, $sort);
-            echo "<!-- Debug: BESTSELLER + Category + Price -->";
-        } elseif($filter === 'bestseller' && $category) {
-            // Sản phẩm bán chạy + category
-            $products = $this->prd_list->products_selectBestsellerByCategory($category, $sort);
-            echo "<!-- Debug: BESTSELLER + Category -->";
-        } elseif($filter === 'bestseller' && $price_range) {
-            // Sản phẩm bán chạy + giá
-            $products = $this->prd_list->products_selectBestsellerByPrice($min_price, $max_price, $sort);
-            echo "<!-- Debug: BESTSELLER + Price -->";
-        } elseif($filter === 'bestseller') {
-            // Chỉ lọc sản phẩm bán chạy
-            $products = $this->prd_list->products_selectBestseller($sort);
-            echo "<!-- Debug: Filter by BESTSELLER -->";
-        } elseif($filter === 'new' && $category && $price_range) {
-            // Sản phẩm mới + category + giá
-            $products = $this->prd_list->products_selectNewByCategoryAndPrice($category, $min_price, $max_price, $sort);
-            echo "<!-- Debug: NEW + Category + Price -->";
-        } elseif($filter === 'new' && $category) {
-            // Sản phẩm mới + category
-            $products = $this->prd_list->products_selectNewByCategory($category, $sort);
-            echo "<!-- Debug: NEW + Category -->";
-        } elseif($filter === 'new' && $price_range) {
-            // Sản phẩm mới + giá
-            $products = $this->prd_list->products_selectNewByPrice($min_price, $max_price, $sort);
-            echo "<!-- Debug: NEW + Price -->";
-        } elseif($filter === 'new') {
-            // Chỉ lọc sản phẩm mới
-            $products = $this->prd_list->products_selectNew($sort);
-            echo "<!-- Debug: Filter by NEW (7 days) -->";
-        } elseif($search && $category && $price_range) {
-            // Tìm kiếm + lọc category + giá
-            $products = $this->prd_list->products_searchByCategoryPriceAndKeyword($category, $min_price, $max_price, $search, $sort);
-            echo "<!-- Debug: Search + Category + Price -->";
-        } elseif($search && $category) {
-            // Tìm kiếm + lọc category
-            $products = $this->prd_list->products_searchByCategoryAndKeyword($category, $search, $sort);
-            echo "<!-- Debug: Search + Category -->";
-        } elseif($search && $price_range) {
-            // Tìm kiếm + lọc giá
-            $products = $this->prd_list->products_searchByPriceAndKeyword($min_price, $max_price, $search, $sort);
-            echo "<!-- Debug: Search + Price -->";
-        } elseif($search) {
-            // Nếu search = "Áo" hoặc "Quần" thì dùng bắt đầu với, còn lại tìm kiếm bình thường
-            if($search === 'Áo' || $search === 'Quần' || $search === 'Ao' || $search === 'Quan') {
-                $products = $this->prd_list->products_searchByKeywordPrefix($search, $sort);
-                echo "<!-- Debug: Search by PREFIX (Áo/Quần) -->";
-            } else {
-                $products = $this->prd_list->products_searchByKeyword($search, $sort);
-                echo "<!-- Debug: Search only -->";
-            }
-        } elseif($category && $price_range) {
-            // Lọc cả category và giá
-            $products = $this->prd_list->products_selectByCategoryAndPrice($category, $min_price, $max_price, $sort);
-            echo "<!-- Debug: Filter by category AND price -->";
-        } elseif($category) {
-            // Chỉ lọc category
-            $products = $this->prd_list->products_selectByCategory($category, $sort);
-            echo "<!-- Debug: Filter by category only -->";
-        } elseif($price_range) {
-            // Chỉ lọc giá
-            $products = $this->prd_list->products_selectByPriceRange($min_price, $max_price, $sort);
-            echo "<!-- Debug: Filter by price only -->";
-        } elseif($collection) {
-            // Lọc collection
-            $products = $this->prd_list->products_selectByCollection($collection, $sort);
-            echo "<!-- Debug: Filter by collection -->";
-        } else {
-            // Không có filter
-            $products = $this->prd_list->products_selectAll($sort);
-            echo "<!-- Debug: No filter - showing all products -->";
-        }
         $user_info = null;
         if (isset($_SESSION['user_id'])) {
             $user_info = $this->model('profile_m')->user_getById($_SESSION['user_id']);
         }
-        echo "<!-- Debug: Products count = " . ($products ? mysqli_num_rows($products) : 0) . " -->";
         
         $this->view('Master_customer', [
             'Page' => 'product_list_v',
             'menu_categories' => $this->menu_categories->categories_selectAll(),
-            'products' => $products,
             'categories' => $this->prd_list->categories_selectAll(),
-            'current_category' => $category,
-            'current_price' => $price_range,
-            'current_sort' => $sort,
-            'search_keyword' => $search,
-            'current_filter' => $sale === 1 ? 'sale' : $filter,
-            'home_model' => $this->home_model,
             'user_info' => $user_info
         ]);
     }
+
+    // 2. API LẤY DANH SÁCH SẢN PHẨM THEO BỘ LỌC
+    function api_get_data() {
+        // Tắt cảnh báo rác, giữ lại lỗi nghiêm trọng để vào try-catch
+        error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING & ~E_DEPRECATED);
+        header('Access-Control-Allow-Origin: *');
+        header('Content-Type: application/json; charset=utf-8');
+
+        try {
+            $category = isset($_GET['category']) ? trim($_GET['category']) : '';
+            $collection = isset($_GET['collection']) ? trim($_GET['collection']) : '';
+            $price_range = isset($_GET['price']) ? trim($_GET['price']) : '';
+            $sort = isset($_GET['sort']) ? trim($_GET['sort']) : 'default';
+            $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+            $filter = isset($_GET['filter']) ? trim($_GET['filter']) : '';
+            $sale = isset($_GET['sale']) ? intval($_GET['sale']) : 0;
+            
+            $min_price = 0; $max_price = 999999999;
+            if($price_range) {
+                $price_parts = explode('-', $price_range);
+                if(count($price_parts) == 2) {
+                    $min_price = intval($price_parts[0]);
+                    $max_price = intval($price_parts[1]);
+                }
+            }
+            
+            $products_rs = null;
+            
+            // --- LOGIC LỌC SẢN PHẨM ---
+            if($sale === 1) {
+                $flashSlug = '';
+                $sections = $this->home_model->sections_getActive();
+                if($sections) {
+                    // Xử lý an toàn cho object hoặc array
+                    $sec_array = [];
+                    if (is_object($sections)) {
+                        while($s = mysqli_fetch_assoc($sections)) $sec_array[] = $s;
+                    } elseif (is_array($sections)) {
+                        $sec_array = $sections;
+                    }
+                    foreach($sec_array as $sec) {
+                        if(strtolower($sec['section_type']) === 'flash_sale' && intval($sec['status']) === 1) {
+                            $collectionId = intval($sec['collection_id']);
+                            if($collectionId > 0) $flashSlug = $this->home_model->collection_getSlug($collectionId);
+                            break;
+                        }
+                    }
+                }
+                
+                if($flashSlug) {
+                    if($category && $price_range) $products_rs = $this->prd_list->products_selectByCollectionCategoryAndPrice($flashSlug, $category, $min_price, $max_price, $sort);
+                    elseif($category) $products_rs = $this->prd_list->products_selectByCollectionAndCategory($flashSlug, $category, $sort);
+                    elseif($price_range) $products_rs = $this->prd_list->products_selectByCollectionAndPriceRange($flashSlug, $min_price, $max_price, $sort);
+                    else $products_rs = $this->prd_list->products_selectByCollection($flashSlug, $sort);
+                }
+                if(!$products_rs) $products_rs = $this->prd_list->products_selectAll($sort);
+            }
+            elseif($filter === 'bestseller' && $category && $price_range) $products_rs = $this->prd_list->products_selectBestsellerByCategoryAndPrice($category, $min_price, $max_price, $sort);
+            elseif($filter === 'bestseller' && $category) $products_rs = $this->prd_list->products_selectBestsellerByCategory($category, $sort);
+            elseif($filter === 'bestseller' && $price_range) $products_rs = $this->prd_list->products_selectBestsellerByPrice($min_price, $max_price, $sort);
+            elseif($filter === 'bestseller') $products_rs = $this->prd_list->products_selectBestseller($sort);
+            elseif($filter === 'new' && $category && $price_range) $products_rs = $this->prd_list->products_selectNewByCategoryAndPrice($category, $min_price, $max_price, $sort);
+            elseif($filter === 'new' && $category) $products_rs = $this->prd_list->products_selectNewByCategory($category, $sort);
+            elseif($filter === 'new' && $price_range) $products_rs = $this->prd_list->products_selectNewByPrice($min_price, $max_price, $sort);
+            elseif($filter === 'new') $products_rs = $this->prd_list->products_selectNew($sort);
+            elseif($search && $category && $price_range) $products_rs = $this->prd_list->products_searchByCategoryPriceAndKeyword($category, $min_price, $max_price, $search, $sort);
+            elseif($search && $category) $products_rs = $this->prd_list->products_searchByCategoryAndKeyword($category, $search, $sort);
+            elseif($search && $price_range) $products_rs = $this->prd_list->products_searchByPriceAndKeyword($min_price, $max_price, $search, $sort);
+            elseif($search) {
+                if(in_array($search, ['Áo', 'Quần', 'Ao', 'Quan'])) $products_rs = $this->prd_list->products_searchByKeywordPrefix($search, $sort);
+                else $products_rs = $this->prd_list->products_searchByKeyword($search, $sort);
+            } 
+            elseif($category && $price_range) $products_rs = $this->prd_list->products_selectByCategoryAndPrice($category, $min_price, $max_price, $sort);
+            elseif($category) $products_rs = $this->prd_list->products_selectByCategory($category, $sort);
+            elseif($price_range) $products_rs = $this->prd_list->products_selectByPriceRange($min_price, $max_price, $sort);
+            elseif($collection) $products_rs = $this->prd_list->products_selectByCollection($collection, $sort);
+            else $products_rs = $this->prd_list->products_selectAll($sort);
+
+
+            // --- XỬ LÝ AN TOÀN TRÁNH LỖI N+1 QUERIES & OBJECT/ARRAY ---
+            $items_array = [];
+            if ($products_rs) {
+                if (is_object($products_rs)) {
+                    while ($p = mysqli_fetch_assoc($products_rs)) $items_array[] = $p;
+                } elseif (is_array($products_rs)) {
+                    $items_array = $products_rs;
+                }
+            }
+
+            $count = count($items_array);
+            $products = [];
+
+            foreach ($items_array as $p) {
+                $colors = [];
+                $variant_map = [];
+                
+                // Lấy biến thể an toàn
+                $variants_result = $this->home_model->get_variants_by_product($p['id']);
+                $v_array = [];
+                if ($variants_result) {
+                    if (is_object($variants_result)) {
+                        while ($v = mysqli_fetch_assoc($variants_result)) $v_array[] = $v;
+                    } elseif (is_array($variants_result)) {
+                        $v_array = $variants_result;
+                    }
+                }
+
+                foreach ($v_array as $v) {
+                    if (!in_array($v['color'], $colors)) {
+                        $colors[] = $v['color'];
+                        
+                        // Lấy ảnh an toàn
+                        $images_result = $this->home_model->get_images_by_variant($v['id']);
+                        $images = [];
+                        if ($images_result) {
+                            if (is_object($images_result)) {
+                                while ($img = mysqli_fetch_assoc($images_result)) $images[] = $img['image_url'];
+                            } elseif (is_array($images_result)) {
+                                foreach ($images_result as $img) $images[] = $img['image_url'];
+                            }
+                        }
+                        if (empty($images)) $images[] = $p['thumbnail'];
+                        
+                        $variant_map[$v['color']] = [
+                            'variant_id' => $v['id'],
+                            'images' => $images,
+                            'hex' => method_exists($this->home_model, 'get_color_hex') ? $this->home_model->get_color_hex($v['color']) : '#ccc'
+                        ];
+                    }
+                }
+                
+                $p['colors'] = $colors;
+                $p['variant_map'] = $variant_map;
+                
+                // Chống lỗi JSON: Ép tất cả các chuỗi thành UTF-8 chuẩn
+                array_walk_recursive($p, function(&$item) {
+                    if (is_string($item)) {
+                        $item = mb_convert_encoding($item, 'UTF-8', 'UTF-8');
+                    }
+                });
+
+                $products[] = $p;
+            }
+
+            // Gói dữ liệu
+            $response = [
+                'success' => true,
+                'count' => $count,
+                'products' => $products,
+                'current_filter' => $sale === 1 ? 'sale' : $filter,
+                'search_keyword' => $search
+            ];
+
+            // Render JSON
+            $json_string = json_encode($response);
+            if ($json_string === false) {
+                echo json_encode(['success' => false, 'message' => 'Lỗi mã hóa JSON: ' . json_last_error_msg()]);
+                exit;
+            }
+
+            echo $json_string;
+            exit;
+
+        } catch (Throwable $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Lỗi PHP: ' . $e->getMessage() . ' tại dòng ' . $e->getLine()
+            ]);
+            exit;
+        }
+    }
 }
+?>

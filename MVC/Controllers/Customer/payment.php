@@ -8,7 +8,7 @@ class payment extends controllers_customer {
         $this->product_detail_model = $this->model('product_detail_m');
     }
 
-    // Tạo URL thanh toán và chuyển hướng sang VNPAY
+    // 1. TẠO URL THANH TOÁN VÀ CHUYỂN HƯỚNG SANG VNPAY
     function create($order_id = null) {
         $order_id = intval($order_id);
         if ($order_id <= 0) {
@@ -26,18 +26,21 @@ class payment extends controllers_customer {
 
         // Nếu đã thanh toán rồi thì đưa về danh sách đơn hàng
         if (isset($order['status']) && strtolower($order['status']) === 'confirmed') {
-            $_SESSION['success'] = 'Đơn hàng #' . $order_id . 'Hoàn thành';
-                header('Location: /web_qlsp/your_order');
+            $_SESSION['success'] = 'Đơn hàng #' . $order_id . ' đã hoàn thành thanh toán.';
+            header('Location: /web_qlsp/your_order');
             exit;
         }
 
         // Chuẩn bị dữ liệu VNPAY
         require_once('./config.php');
-        // Ghi đè URL return để quay về controller này theo MVC
-            $vnp_Returnurl = 'http://localhost/web_qlsp/payment/return';
+        
+        // Tự động lấy Domain hiện tại thay vì Hardcode Localhost
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+        $domain = $_SERVER['HTTP_HOST'];
+        $vnp_Returnurl = $protocol . '://' . $domain . '/web_qlsp/payment/return';
 
         $vnp_TxnRef   = $order_id;
-        $vnp_OrderInfo= 'Thanh toán đơn hàng #' . $order_id;
+        $vnp_OrderInfo= 'Thanh toan don hang #' . $order_id;
         $vnp_OrderType= 'other';
         $vnp_Amount   = intval($order['total_money']) * 100; // nhân 100 theo chuẩn VNPAY
         $vnp_Locale   = 'vn';
@@ -60,7 +63,6 @@ class payment extends controllers_customer {
             'vnp_ExpireDate'=> $vnp_ExpireDate
         );
 
-        // Tùy chọn: chọn ngân hàng qua query ?bank=...
         if (isset($_GET['bank']) && $_GET['bank'] !== '') {
             $inputData['vnp_BankCode'] = $_GET['bank'];
         }
@@ -85,23 +87,27 @@ class payment extends controllers_customer {
             $vnp_Url_full .= 'vnp_SecureHash=' . $vnpSecureHash;
         }
 
-            header('Location: ' . $vnp_Url_full);
+        // Chuyển hướng người dùng sang giao diện VNPAY
+        header('Location: ' . $vnp_Url_full);
         exit;
     }
 
-    // Trang nhận kết quả người dùng quay về từ VNPAY
+    // 2. TRANG NHẬN KẾT QUẢ TỪ VNPAY KHI USER QUAY VỀ
     function return() {
         require_once('./config.php');
         $vnp_SecureHash = $_GET['vnp_SecureHash'] ?? '';
         $inputData = array();
+        
         foreach ($_GET as $key => $value) {
             if (substr($key, 0, 4) == 'vnp_') {
                 $inputData[$key] = $value;
             }
         }
+        
         $order_id = isset($inputData['vnp_TxnRef']) ? intval($inputData['vnp_TxnRef']) : 0;
         unset($inputData['vnp_SecureHash']);
         ksort($inputData);
+        
         $i = 0;
         $hashData = '';
         foreach ($inputData as $key => $value) {
@@ -112,71 +118,58 @@ class payment extends controllers_customer {
                 $i = 1;
             }
         }
+        
         $secureHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
 
         if ($secureHash === $vnp_SecureHash && isset($_GET['vnp_ResponseCode']) && $_GET['vnp_ResponseCode'] === '00') {
-            // Thanh toán thành công: cập nhật đơn hàng
+            // THANH TOÁN THÀNH CÔNG
             if ($order_id > 0) {
                 $order = $this->cart_model->order_getById($order_id);
                 if ($order && strtolower($order['status']) !== 'confirmed') {
-                    // Cập nhật trạng thái
+                    
+                    // Chỉ cập nhật trạng thái đơn hàng thành Đã Xác Nhận
+                    // (Tồn kho và điểm đã được trừ bên lúc tạo đơn hàng ở file cart.php rồi, không trừ lại nữa)
                     $this->cart_model->order_updateStatus($order_id, 'confirmed');
 
-                    // Trừ tồn kho dựa trên order_items
-                    $items = $this->cart_model->orderItems_getByOrderId($order_id);
-                    if ($items) {
-                        while ($item = mysqli_fetch_assoc($items)) {
-                            $qty = intval($item['quantity']);
-                            $variant_id = isset($item['variant_id']) ? intval($item['variant_id']) : null;
-                            if (!empty($variant_id)) {
-                                $this->product_detail_model->variant_updateStock($variant_id, $qty);
-                            } else {
-                                $this->cart_model->product_updateStock(intval($item['product_id']), $qty);
-                            }
-                        }
-                    }
-
-                    // Cập nhật số lần dùng voucher nếu có
-                    if (!empty($order['voucher_code'])) {
-                        // Tìm voucher theo code để tăng used_count (giữ nguyên hàm cập nhật theo id nếu cần)
-                        // Ở đây đơn giản bỏ qua nếu không có id, vì hàm hiện tại cần id.
-                    }
-
-                    // Trừ điểm người dùng nếu đơn có sử dụng điểm
-                    if (!empty($order['user_id']) && intval($order['points_used']) > 0) {
-                        if (method_exists($this->cart_model, 'user_decreasePoints')) {
-                            $this->cart_model->user_decreasePoints(intval($order['user_id']), intval($order['points_used']));
-                        }
-                    }
-
-                    // Xóa giỏ hàng nếu người dùng còn giữ session
+                    // Dọn sạch giỏ hàng
                     if (isset($_SESSION['cart'])) {
-                        $this->cart_model->clearCart();
+                        unset($_SESSION['cart']);
                     }
                 }
             }
             $_SESSION['success'] = 'Thanh toán VNPAY thành công cho đơn #' . $order_id;
-                header('Location: http://localhost/web_qlsp/your_order');
+            header('Location: /web_qlsp/your_order');
             exit;
+            
         } else {
-            $_SESSION['error'] = 'Thanh toán thất bại hoặc chữ ký không hợp lệ.';
-                header('Location: http://localhost/web_qlsp/your_order');
+            // THANH TOÁN THẤT BẠI HOẶC BỊ HỦY
+            $_SESSION['error'] = 'Thanh toán VNPAY thất bại hoặc đã bị hủy.';
+            
+            // Cập nhật lại trạng thái đơn hàng là Đã Hủy
+            if ($order_id > 0) {
+                $this->cart_model->order_updateStatus($order_id, 'cancelled');
+            }
+            
+            header('Location: /web_qlsp/your_order');
             exit;
         }
     }
 
-    // IPN server-to-server từ VNPAY
+    // 3. IPN SERVER-TO-SERVER (VNPAY gọi ngầm vào API này để confirm)
     function ipn() {
         require_once('./config.php');
         $inputData = array();
+        
         foreach ($_GET as $key => $value) {
             if (substr($key, 0, 4) == 'vnp_') {
                 $inputData[$key] = $value;
             }
         }
+        
         $vnp_SecureHash = $inputData['vnp_SecureHash'] ?? '';
         unset($inputData['vnp_SecureHash']);
         ksort($inputData);
+        
         $i = 0;
         $hashData = '';
         foreach ($inputData as $key => $value) {
@@ -188,10 +181,12 @@ class payment extends controllers_customer {
             }
         }
         $secureHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
+        
         $order_id = isset($inputData['vnp_TxnRef']) ? intval($inputData['vnp_TxnRef']) : 0;
         $amount = isset($inputData['vnp_Amount']) ? intval($inputData['vnp_Amount'])/100 : 0;
 
         header('Content-Type: application/json');
+        
         if ($secureHash !== $vnp_SecureHash) {
             echo json_encode(['RspCode' => '97', 'Message' => 'Invalid signature']);
             exit;
@@ -202,12 +197,12 @@ class payment extends controllers_customer {
             echo json_encode(['RspCode' => '01', 'Message' => 'Order not found']);
             exit;
         }
+        
         if (intval($order['total_money']) !== intval($amount)) {
             echo json_encode(['RspCode' => '04', 'Message' => 'invalid amount']);
             exit;
         }
 
-        // Tránh xử lý lặp
         if (strtolower($order['status']) === 'confirmed') {
             echo json_encode(['RspCode' => '02', 'Message' => 'Order already confirmed']);
             exit;
@@ -215,14 +210,13 @@ class payment extends controllers_customer {
 
         $respCode = $inputData['vnp_ResponseCode'] ?? '';
         $transStatus = $inputData['vnp_TransactionStatus'] ?? '';
+        
         if ($respCode === '00' || $transStatus === '00') {
-            // Đánh dấu thanh toán thành công
             $this->cart_model->order_updateStatus($order_id, 'confirmed');
             echo json_encode(['RspCode' => '00', 'Message' => 'Confirm Success']);
             exit;
         } else {
-            // Thanh toán thất bại
-            $this->cart_model->order_updateStatus($order_id, 'pending');
+            $this->cart_model->order_updateStatus($order_id, 'cancelled');
             echo json_encode(['RspCode' => '00', 'Message' => 'Confirm Failed']);
             exit;
         }

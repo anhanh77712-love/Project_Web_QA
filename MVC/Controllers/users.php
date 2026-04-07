@@ -1,137 +1,141 @@
 <?php
 class users extends controllers {
     private $user;
+    
     function __construct() {
         $this->user = $this->model('users_m');
     }
+
+    // Thiết lập Header dùng chung cho API
+    private function setApiHeader() {
+        header('Access-Control-Allow-Origin: *');
+        header('Content-Type: application/json; charset=utf-8');
+    }
+
+    // 1. LUỒNG DÀNH CHO TRÌNH DUYỆT WEB (Chỉ tải giao diện rỗng)
     function Get_data() {
         $this->view('Master', [
-            'Page' => 'users_v',
-            'users_list' => $this->user->users_selectAll()
+            'Page' => 'users_v'
         ]);
     }
 
-    function search() {
+    // 2. API LẤY DANH SÁCH (CÓ TÌM KIẾM)
+    function api_get_data() {
+        $this->setApiHeader();
         $q = isset($_GET['q']) ? trim($_GET['q']) : '';
-        $result = $q !== '' ? $this->user->users_searchByName($q) : $this->user->users_selectAll();
-        $this->view('Master', [
-            'Page' => 'users_v',
-            'users_list' => $result,
-            'search_q' => $q
-        ]);
-    }
-
-    // Thêm hàm này vào class users trong file users.php
-    function get_order_history($id) {
-        $orders = $this->user->users_getOrderHistory($id);
-        $data = [];
         
-        if ($orders && mysqli_num_rows($orders) > 0) {
-            while ($row = mysqli_fetch_assoc($orders)) {
-                // Format lại dữ liệu cho đẹp trước khi gửi về client
-                $row['created_at_format'] = date('d/m/Y H:i', strtotime($row['created_at']));
-                $row['total_money_format'] = number_format($row['total_money'], 0, ',', '.') . ' VNĐ';
+        $result = $q !== '' ? $this->user->users_searchByName($q) : $this->user->users_selectAll();
+        $data = [];
+
+        if ($result && mysqli_num_rows($result) > 0) {
+            while ($row = mysqli_fetch_assoc($result)) {
                 $data[] = $row;
             }
         }
         
-        // Trả về dữ liệu dạng JSON
-        header('Content-Type: application/json');
-        echo json_encode($data);
-        exit();
+        echo json_encode(['success' => true, 'data' => $data]);
+        exit;
     }
-    // Thêm vào class users trong file users.php
-    function get_order_details($order_id) {
-        // Gọi model orders_m để lấy dữ liệu
-        $orderModel = $this->model('orders_m');
+
+    // 3. API THÊM KHÁCH HÀNG MỚI
+    function api_add() {
+        $this->setApiHeader();
         
-        // 1. Lấy thông tin chung của đơn hàng
-        $orderInfo = $orderModel->order_getById($order_id);
-        
-        // 2. Lấy danh sách sản phẩm trong đơn hàng
-        $itemsResult = $orderModel->orderItems_getByOrderId($order_id);
-        $items = [];
-        if ($itemsResult && mysqli_num_rows($itemsResult) > 0) {
-            while ($row = mysqli_fetch_assoc($itemsResult)) {
-                $items[] = $row;
-            }
-        }
-        
-        // 3. Trả về JSON
-        $response = [
-            'info' => $orderInfo,
-            'items' => $items
-        ];
-        
-        header('Content-Type: application/json');
-        echo json_encode($response);
-        exit();
-    }
-    // Thêm hàm này vào file users.php
-    function add() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $full_name = trim($_POST['full_name']);
             $email = trim($_POST['email']);
             $phone = trim($_POST['phone']);
             $password = $_POST['password'];
 
-    
+            // Cần băm mật khẩu trước khi lưu (Bảo mật)
+            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-            // 2. Gọi Model để thêm người dùng
-            // Truyền null cho các trường chưa có (google_id, avatar, địa chỉ...)
             $kq = $this->user->users_insert_default(
-                $full_name, $email, $phone, $password,
+                $full_name, $email, $phone, $hashed_password,
                 null, null, null, null, null, null
             );
 
-            // 3. Xử lý thông báo trả về
-            if (session_status() === PHP_SESSION_NONE) session_start();
-
             if ($kq === true) {
-                $_SESSION['status_msg'] = "success";
+                echo json_encode(['success' => true, 'message' => 'Thêm khách hàng thành công!']);
             } elseif ($kq === "EMAIL_EXISTED") {
-                $_SESSION['status_msg'] = "email_existed";
+                echo json_encode(['success' => false, 'message' => 'Email này đã tồn tại!']);
             } elseif ($kq === "PHONE_EXISTED") {
-                $_SESSION['status_msg'] = "phone_existed";
+                echo json_encode(['success' => false, 'message' => 'Số điện thoại này đã tồn tại!']);
             } else {
-                $_SESSION['status_msg'] = "error";
+                echo json_encode(['success' => false, 'message' => 'Lỗi hệ thống khi thêm khách hàng!']);
             }
-
-            // 4. Quay lại trang danh sách
-            header("Location: /web_qlsp/users");
-            exit();
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Lỗi phương thức']);
         }
+        exit;
     }
 
-     function thongBao($kq){
-        if (session_status() === PHP_SESSION_NONE) session_start();
-                 if ($kq) {
-                        $_SESSION['status_msg'] = "success";
-                    } else {
-                        $_SESSION['status_msg'] = "error";
-                    }
+    // 4. API XÓA KHÁCH HÀNG
+    function api_delete($id) {
+        $this->setApiHeader();
+        $kq = $this->user->users_delete($id);
+        
+        if ($kq) {
+            echo json_encode(['success' => true, 'message' => 'Đã xóa khách hàng thành công!']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Lỗi khi xóa khách hàng!']);
+        }
+        exit;
+    }
 
-                    // 3. Quay trở lại trang danh sách
-                    header("Location: /web_qlsp/users");
-                    exit();
+    // ==========================================
+    // CÁC API CŨ CỦA BẠN (Đã chuẩn JSON)
+    // ==========================================
+
+    function get_order_history($id) {
+        $this->setApiHeader();
+        $orders = $this->user->users_getOrderHistory($id);
+        $data = [];
+        
+        if ($orders && mysqli_num_rows($orders) > 0) {
+            while ($row = mysqli_fetch_assoc($orders)) {
+                $row['created_at_format'] = date('d/m/Y H:i', strtotime($row['created_at']));
+                $row['total_money_format'] = number_format($row['total_money'], 0, ',', '.') . ' VNĐ';
+                $data[] = $row;
+            }
+        }
+        echo json_encode($data);
+        exit();
     }
     
-    function delete($id) {
-        $kq = $this->user->users_delete($id);
-        $this->thongBao($kq);
+    function get_order_details($order_id) {
+        $this->setApiHeader();
+        $orderModel = $this->model('orders_m');
+        
+        $orderInfo = $orderModel->order_getById($order_id);
+        $itemsResult = $orderModel->orderItems_getByOrderId($order_id);
+        $items = [];
+        
+        if ($itemsResult && mysqli_num_rows($itemsResult) > 0) {
+            while ($row = mysqli_fetch_assoc($itemsResult)) {
+                $items[] = $row;
+            }
+        }
+        
+        echo json_encode([
+            'info' => $orderInfo,
+            'items' => $items
+        ]);
+        exit();
     }
-    public function export_excel() {
-        // 1. Lấy dữ liệu từ Model
-        // Giả sử Model của bạn có hàm lấy tất cả khách hàng
-        $users = $this->user->users_selectAll(); 
 
-        if (mysqli_num_rows($users) > 0) {
-            // 2. Khởi tạo PHPExcel (hoặc PhpSpreadsheet)
+    // XUẤT EXCEL (Tải file trực tiếp)
+    public function export_excel() {
+        $q = isset($_GET['q']) ? trim($_GET['q']) : '';
+        $users = $q !== '' ? $this->user->users_searchByName($q) : $this->user->users_selectAll();
+
+        if ($users && mysqli_num_rows($users) > 0) {
+            if (!class_exists('PHPExcel')) require_once "./MVC/Bridge.php";
+            
             $objPHPExcel = new PHPExcel();
             $objPHPExcel->setActiveSheetIndex(0);
             $sheet = $objPHPExcel->getActiveSheet();
 
-            // 3. Đặt tiêu đề cho các cột (Dựa theo ảnh CSDL bạn gửi)
             $sheet->setCellValue('A1', 'ID');
             $sheet->setCellValue('B1', 'HỌ VÀ TÊN');
             $sheet->setCellValue('C1', 'EMAIL');
@@ -140,10 +144,8 @@ class users extends controllers {
             $sheet->setCellValue('F1', 'ĐỊA CHỈ CHI TIẾT');
             $sheet->setCellValue('G1', 'NGÀY THAM GIA');
 
-            // Định dạng tiêu đề in đậm
             $sheet->getStyle('A1:G1')->getFont()->setBold(true);
 
-            // 4. Đổ dữ liệu từ CSDL vào file
             $row = 2;
             while ($u = mysqli_fetch_assoc($users)) {
                 $sheet->setCellValue('A' . $row, $u['id']);
@@ -156,13 +158,12 @@ class users extends controllers {
                 $row++;
             }
 
-            // Tự động căn chỉnh độ rộng cột
             foreach (range('A', 'G') as $columnID) {
                 $sheet->getColumnDimension($columnID)->setAutoSize(true);
             }
 
-            // 5. Cấu hình Header để tải file về máy
             $filename = "Danh_sach_khach_hang_" . date('Ymd_His') . ".xlsx";
+            if (ob_get_contents()) ob_end_clean();
             header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
             header('Content-Disposition: attachment;filename="' . $filename . '"');
             header('Cache-Control: max-age=0');
@@ -175,3 +176,4 @@ class users extends controllers {
         }
     }
 }
+?>
