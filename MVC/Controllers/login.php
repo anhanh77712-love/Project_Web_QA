@@ -14,11 +14,20 @@ class login extends controllers {
     // API: XỬ LÝ ĐĂNG NHẬP
     function login() {
         $this->setApiHeader();
+         
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $email = $_POST['email'] ?? '';
-            $password = $_POST['password'] ?? '';
-            $remember = isset($_POST['remember']);
+            // $email = $_POST['email'] ?? '';
+            // $password = $_POST['password'] ?? '';
+            // $remember = isset($_POST['remember']);
+            // Đọc dữ liệu từ raw JSON body
+                $json = file_get_contents('php://input');
+                $data = json_decode($json, true);
+
+                // Lấy thông tin từ JSON, nếu không có thì thử lấy từ $_POST để tương thích ngược
+                $email = $data['email'] ?? ($_POST['email'] ?? '');
+                $password = $data['password'] ?? ($_POST['password'] ?? '');
+                $remember = isset($data['remember']) || isset($_POST['remember']);
 
             $user = $this->userModel->users_checkLogin($email);
 

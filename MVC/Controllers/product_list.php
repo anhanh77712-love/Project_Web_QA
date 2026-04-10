@@ -10,9 +10,7 @@ class product_list extends controllers
         $this->pdlist = $this->model("product_m");
     }
 
-    // ==========================================
-    // CÁC HÀM TIỆN ÍCH DÙNG CHUNG
-    // ==========================================
+
 
     private function setApiHeader() {
         header('Access-Control-Allow-Origin: *');
@@ -44,11 +42,7 @@ class product_list extends controllers
         } catch (Exception $e) { return ''; }
     }
 
-    // ==========================================
-    // PHẦN 1: QUẢN LÝ DANH SÁCH SẢN PHẨM
-    // ==========================================
 
-    // Load giao diện rỗng của trang Danh sách
     public function Get_data()
     {
         $this->view('Master', ['Page' => 'product_list_v']);

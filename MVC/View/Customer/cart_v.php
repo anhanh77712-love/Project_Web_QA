@@ -212,6 +212,7 @@ if (session_status() == PHP_SESSION_NONE) {
             <div class="cart-fixed-content">
                 <div class="cart-fixed-summary">
                     <div class="cart-fixed-row"><span class="cart-fixed-label">Tạm tính</span><span class="cart-fixed-value" id="subTotalFixed">0đ</span></div>
+                    <div class="cart-fixed-row"><span class="cart-fixed-label">Tiền ship</span><span class="cart-fixed-value" id="shippingFixed">0đ</span></div>
                     <div class="cart-fixed-row"><span class="cart-fixed-label">Voucher</span><span class="cart-fixed-value text-danger" id="voucherFixed">-0đ</span></div>
                     <div class="cart-fixed-row"><span class="cart-fixed-label">Điểm đổi</span><span class="cart-fixed-value text-danger" id="pointsFixed">-0đ</span></div>
                     <div class="cart-fixed-total"><span class="cart-fixed-label">Tổng cộng</span><span class="cart-fixed-value" id="totalPriceFixed">0đ</span></div>
@@ -267,6 +268,7 @@ $(document).ready(function() {
         $('#subTotalFixed').text(subtotal.toLocaleString() + 'đ');
         $('#voucherFixed').text('-' + voucherDiscount.toLocaleString() + 'đ');
         $('#pointsFixed').text('-' + pointsUsed.toLocaleString() + 'đ');
+        $('#shippingFixed').text(shipping.toLocaleString() + 'đ');
         $('#totalPriceFixed').text(total.toLocaleString() + 'đ');
 
         $('#pointsToUseField').val(pointsUsed);

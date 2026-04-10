@@ -77,6 +77,10 @@
     <div class="sb-nav-link-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
     Doanh thu
 </a>
+<a href="/web_qlsp/reviews" class="nav-link <?= isActive(['reviews'], $currentRoute) ?>">
+    <div class="sb-nav-link-icon"><i class="fa-solid fa-star"></i></div>
+    Đánh giá sản phẩm
+</a>
 
 </div>
 <div class="page">

@@ -60,9 +60,7 @@ class cart extends controllers_customer
         ]);
     }
 
-    // ===============================================
-    // [HÀM MỚI] API LẤY LẠI GIỎ HÀNG KHÔNG CẦN F5 TRANG
-    // ===============================================
+
     public function api_get_cart_items() {
         header('Content-Type: application/json; charset=utf-8');
         $cart_items = isset($_SESSION['cart']) ? $_SESSION['cart'] : [];

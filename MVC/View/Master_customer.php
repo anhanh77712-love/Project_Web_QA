@@ -22,7 +22,7 @@
 <nav class="navbar navbar-expand-lg sticky-top bg-white">
     <div class="container-fluid px-lg-5">
         <a class="navbar-brand me-4" href="/web_qlsp/home">
-            <span class="fw-bold" style="font-size: 22px; letter-spacing: -1.5px;">COOLMATE</span><span style="color:#2f5acf; font-weight: 900;">.ME</span>
+            <span class="fw-bold" style="font-size: 22px; letter-spacing: -1.5px;">COOL</span><span style="color:#2f5acf; font-weight: 900;">.ME</span>
         </a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">

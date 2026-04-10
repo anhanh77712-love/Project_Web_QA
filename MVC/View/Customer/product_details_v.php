@@ -694,5 +694,343 @@
             });
         });
     </script>
+    <style>
+    .review-section { max-width: 100%; margin: 30px 0; background: #fff; padding: 30px 40px; border-radius: 12px; font-family: Arial, sans-serif; }
+    .review-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px; }
+    .star-rating { color: #f1c40f; font-size: 16px; }
+    .review-form { margin-bottom: 30px; background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #eee;}
+    .review-form h4 { margin-top: 0; margin-bottom: 15px; font-size: 16px;}
+    .star-input { display: flex; gap: 8px; margin-bottom: 15px; cursor: pointer; }
+    .star-input i { font-size: 26px; color: #ddd; transition: 0.2s; }
+    .star-input i:hover, .star-input i.active { color: #f1c40f; }
+    .review-item { padding: 20px 0; border-bottom: 1px solid #eee; display: flex; gap: 15px; }
+    .review-item:last-child { border-bottom: none; }
+    .review-avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; background: #eee; border: 1px solid #ddd;}
+    .review-content { flex: 1; }
+    .review-name { font-weight: 700; font-size: 15px; margin-bottom: 6px; color: #333;}
+    .review-date { font-size: 12px; color: #999; margin-top: 8px; }
+    #reviewText { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px; resize: none; font-family: Arial, sans-serif;}
+    #reviewText:focus { outline: none; border-color: #2563eb; }
+</style>
+<style>
+    /* Tổng thể phần đánh giá */
+    .review-section {
+        max-width: 100%;
+        margin: 40px 0;
+        background: #ffffff;
+        padding: 30px;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* Tiêu đề và điểm trung bình */
+    .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .review-header h3 {
+        font-weight: 700;
+        color: #1a1a1a;
+        letter-spacing: -0.5px;
+    }
+
+    .star-rating {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #ffc107;
+        font-weight: 600;
+        background: #fff9e6;
+        padding: 6px 14px;
+        border-radius: 20px;
+    }
+
+    /* Form viết đánh giá */
+    .review-form {
+        background: #f8f9fa;
+        padding: 25px;
+        border-radius: 12px;
+        margin-bottom: 40px;
+        border: 1px solid #edf2f7;
+    }
+
+    .review-form h4 {
+        margin-bottom: 15px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #4a5568;
+    }
+
+    /* Input chọn sao */
+    .star-input {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .star-input i {
+        font-size: 28px;
+        color: #d1d5db;
+        cursor: pointer;
+        transition: transform 0.2s, color 0.2s;
+    }
+    
+    .star-input i:hover {
+        transform: scale(1.2);
+    }
+    
+    .star-input i.active {
+        color: #ffc107;
+    }
+
+    /* Textarea và Nút gửi */
+    #reviewText {
+        width: 100%;
+        padding: 15px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        margin-bottom: 15px;
+        resize: vertical;
+        font-size: 14px;
+        transition: all 0.3s;
+        background: #fff;
+    }
+
+    #reviewText:focus {
+        outline: none;
+        border-color: #000;
+        box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+    }
+
+    #submitReview {
+        background: #000;
+        color: #fff;
+        padding: 12px 30px;
+        border-radius: 8px;
+        border: none;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    #submitReview:hover {
+        background: #333;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    /* Danh sách đánh giá */
+    .review-item {
+        display: flex;
+        gap: 20px;
+        padding: 25px 0;
+        border-bottom: 1px solid #f1f5f9;
+        transition: background 0.3s;
+    }
+    
+    .review-item:last-child {
+        border-bottom: none;
+    }
+
+    .review-avatar {
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #fff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .review-content {
+        flex: 1;
+    }
+
+    .review-name {
+        font-weight: 700;
+        color: #2d3748;
+        font-size: 15px;
+        margin-bottom: 4px;
+    }
+
+    .review-content .star-rating-static {
+        color: #ffc107;
+        font-size: 13px;
+        margin-bottom: 8px;
+    }
+
+    .review-content p {
+        color: #4a5568;
+        line-height: 1.6;
+        font-size: 14.5px;
+        margin-top: 8px !important;
+    }
+
+    .review-date {
+        font-size: 12px;
+        color: #a0aec0;
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+</style>
+
+<div class="review-section">
+    <div class="review-header">
+        <h3>Đánh giá từ khách hàng</h3>
+        <div id="avgRatingDisplay" class="star-rating">
+            </div>
+    </div>
+
+    <div class="review-form">
+        <h4>Trải nghiệm của bạn thế nào?</h4>
+        <div class="star-input" id="starInput">
+            <i class="fas fa-star active" data-val="1"></i>
+            <i class="fas fa-star active" data-val="2"></i>
+            <i class="fas fa-star active" data-val="3"></i>
+            <i class="fas fa-star active" data-val="4"></i>
+            <i class="fas fa-star active" data-val="5"></i>
+        </div>
+        <textarea id="reviewText" rows="3" placeholder="Ví dụ: Chất vải rất mềm mịn, giao hàng nhanh chóng..."></textarea>
+        <button type="button" id="submitReview">
+            <i class="fas fa-paper-plane"></i> Gửi đánh giá ngay
+        </button>
+    </div>
+
+    <div id="reviewList">
+        <div style="text-align:center; padding:40px;">
+            <div class="spinner-border text-dark" role="status"></div>
+            <p style="color:#999; margin-top: 10px;">Đang tải những đánh giá mới nhất...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+// TOÀN BỘ LOGIC JAVASCRIPT CỦA BẠN ĐƯỢC GIỮ NGUYÊN 100%
+document.addEventListener('DOMContentLoaded', function() {
+    const product_id = <?= $product['id'] ?>;
+    let selectedRating = 5;
+
+    const stars = document.querySelectorAll('#starInput i');
+    
+    function updateStars(val) {
+        stars.forEach(s => {
+            if (parseInt(s.getAttribute('data-val')) <= val) {
+                s.classList.add('active');
+            } else {
+                s.classList.remove('active');
+            }
+        });
+    }
+
+    stars.forEach(s => {
+        s.addEventListener('click', function() {
+            selectedRating = parseInt(this.getAttribute('data-val'));
+            updateStars(selectedRating);
+        });
+    });
+
+    function loadReviews() {
+        fetch(`/web_qlsp/reviews/api_get_by_product?product_id=${product_id}`)
+            .then(res => res.json())
+            .then(data => {
+                const list = document.getElementById('reviewList');
+                const avgDisplay = document.getElementById('avgRatingDisplay');
+                
+                if(data.data && data.data.length > 0) {
+                    list.innerHTML = '';
+                    let totalStars = 0;
+
+                    data.data.forEach(r => {
+                        const rate = parseInt(r.rating);
+                        totalStars += rate;
+                        
+                        const starHtml = '<i class="fas fa-star"></i>'.repeat(rate) + 
+                                         '<i class="far fa-star" style="color:#ddd"></i>'.repeat(5 - rate);
+                        
+                        const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(r.full_name)}&background=random&color=fff&size=100`;
+                        const avatarSrc = (r.avatar && r.avatar.trim() !== '') ? `/web_qlsp/Public/Picture/users/${r.avatar}` : defaultAvatar;
+
+                        list.innerHTML += `
+                            <div class="review-item">
+                                <img src="${avatarSrc}" class="review-avatar" 
+                                     onerror="this.onerror=null; this.src='${defaultAvatar}';">
+                                <div class="review-content">
+                                    <div class="review-name">${r.full_name}</div>
+                                    <div class="star-rating-static">${starHtml}</div>
+                                    <p>${r.comment}</p>
+                                    <div class="review-date"><i class="far fa-clock"></i> Đã đánh giá vào ${r.review_date}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    const avg = (totalStars / data.data.length).toFixed(1);
+                    avgDisplay.innerHTML = `<strong>${avg}/5</strong> <i class="fas fa-star"></i> (${data.data.length} đánh giá)`;
+
+                } else {
+                    list.innerHTML = '<div style="text-align:center; color:#999; padding:40px; font-style:italic;">Sản phẩm này chưa có đánh giá. Hãy trở thành người đầu tiên!</div>';
+                    avgDisplay.innerHTML = '';
+                }
+            })
+            .catch(err => {
+                console.error("Lỗi khi tải đánh giá:", err);
+                document.getElementById('reviewList').innerHTML = '<div style="color:red; padding:10px; text-align:center;">Không thể tải dữ liệu đánh giá lúc này.</div>';
+            });
+    }
+
+    loadReviews();
+
+    document.getElementById('submitReview').addEventListener('click', function() {
+        const comment = document.getElementById('reviewText').value;
+        if(!comment.trim()) { 
+            if(typeof showToast === 'function') showToast('Vui lòng nhập nội dung đánh giá!', 'warning');
+            else alert('Vui lòng nhập nội dung đánh giá!');
+            return; 
+        }
+
+        const formData = new FormData();
+        formData.append('product_id', product_id);
+        formData.append('rating', selectedRating);
+        formData.append('comment', comment);
+
+        fetch('/web_qlsp/reviews/add', { 
+            method: 'POST', 
+            body: formData 
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                if(typeof showToast === 'function') showToast(data.message, 'success');
+                else alert(data.message);
+                
+                document.getElementById('reviewText').value = '';
+                updateStars(5);
+                selectedRating = 5;
+                loadReviews();
+            } else {
+                if(typeof showToast === 'function') showToast(data.message, 'error');
+                else alert(data.message);
+            }
+        })
+        .catch(err => {
+            console.error("Lỗi gửi đánh giá:", err);
+            if(typeof showToast === 'function') showToast('Lỗi kết nối máy chủ!', 'error');
+            else alert('Lỗi kết nối máy chủ!');
+        });
+    });
+});
+</script>
 </body>
 </html>
