@@ -8,7 +8,7 @@ class reviews extends controllers {
     
     function Get_data() {
         $this->view('Master', [
-            'Page' => 'reviews_admin_v' 
+            'Page' => 'reviews_v' 
         ]);
     }
 
