@@ -85,144 +85,181 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    const statusTextMap = {
-        'pending': 'Chờ xác nhận',
-        'confirmed': 'Đã xác nhận',
-        'shipping': 'Đang giao hàng',
-        'completed': 'Hoàn thành',
-        'cancelled': 'Đã hủy'
-    };
+const statusTextMap = {
+    'pending': 'Chờ xác nhận',
+    'confirmed': 'Đã xác nhận',
+    'shipping': 'Đang giao hàng',
+    'completed': 'Hoàn thành',
+    'cancelled': 'Đã hủy'
+};
 
-    // 1. HÀM TẢI DỮ LIỆU ĐƠN HÀNG
-    function loadOrders() {
-        const params = new URLSearchParams(window.location.search);
-        const currentStatus = params.get('status') || '';
+// =============================
+// LOAD ORDERS
+// =============================
+function loadOrders() {
+    const params = new URLSearchParams(window.location.search);
+    const currentStatus = params.get('status') || '';
 
-        // Cập nhật giao diện Tab
-        document.querySelectorAll('.order-tab').forEach(tab => {
-            tab.classList.remove('active');
-            if (tab.getAttribute('data-status') === currentStatus) tab.classList.add('active');
-        });
-
-        document.getElementById('loading-skeleton').style.display = 'block';
-        document.getElementById('orders-container').style.display = 'none';
-
-        // Lấy dữ liệu ngầm
-        fetch(`/web_qlsp/your_order/api_get_orders?status=${currentStatus}`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    // Update số lượng trên từng Tab
-                    document.getElementById('count-all').textContent = data.counts.all || 0;
-                    document.getElementById('count-pending').textContent = data.counts.pending || 0;
-                    document.getElementById('count-confirmed').textContent = data.counts.confirmed || 0;
-                    document.getElementById('count-shipping').textContent = data.counts.shipping || 0;
-                    document.getElementById('count-completed').textContent = data.counts.completed || 0;
-                    document.getElementById('count-cancelled').textContent = data.counts.cancelled || 0;
-
-                    renderOrders(data.orders);
-                } else {
-                    Swal.fire('Lỗi', data.message, 'error');
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                document.getElementById('orders-container').innerHTML = '<div class="text-center py-5 text-danger">Lỗi kết nối máy chủ</div>';
-                document.getElementById('loading-skeleton').style.display = 'none';
-                document.getElementById('orders-container').style.display = 'block';
-            });
-    }
-
-    // 2. VẼ DANH SÁCH ĐƠN HÀNG LÊN MÀN HÌNH
-    function renderOrders(orders) {
-        const container = document.getElementById('orders-container');
-        let html = '';
-
-        if (orders && orders.length > 0) {
-            orders.forEach(order => {
-                const firstItem = order.items && order.items.length > 0 ? order.items[0] : null;
-                const totalItems = order.total_items;
-                const dateStr = new Date(order.created_at).toLocaleString('vi-VN', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'});
-                
-                let productHtml = '';
-                if (firstItem) {
-                    const img = firstItem.variant_image ? firstItem.variant_image : firstItem.product_image;
-                    const sizeStr = firstItem.size ? ` | Size: ${firstItem.size}` : '';
-                    const colorStr = firstItem.color ? ` | Màu: ${firstItem.color}` : '';
-                    const moreStr = totalItems > 1 ? `<p class="text-muted mt-2 mb-0" style="font-size: 14px;">+ ${totalItems - 1} sản phẩm khác</p>` : '';
-                    
-                    productHtml = `
-                    <div class="order-product-item">
-                        <img src="/web_qlsp/Public/Picture/${img}" alt="${firstItem.product_name}" class="order-product-img">
-                        <div class="flex-grow-1">
-                            <h6 class="mb-1">${firstItem.product_name}</h6>
-                            <p class="text-muted mb-1" style="font-size: 14px;">Số lượng: ${firstItem.quantity}${sizeStr}${colorStr}</p>
-                            <p class="fw-bold mb-0" style="color: #2f5acf;">${parseInt(firstItem.price).toLocaleString('vi-VN')}đ</p>
-                        </div>
-                    </div>
-                    ${moreStr}`;
-                }
-
-                let btnHtml = `<button class="btn-view-detail" onclick="viewOrderDetail(${order.id})"><i class="fas fa-eye me-1"></i> Xem chi tiết</button>`;
-                if (order.status === 'shipping') {
-                    btnHtml += ` <button class="btn-confirm-order" onclick="confirmOrder(${order.id})"><i class="fas fa-check me-1"></i> Đã nhận hàng</button>`;
-                }
-                if (order.status === 'pending') {
-                    btnHtml += ` <button class="btn-cancel-order" onclick="cancelOrder(${order.id})"><i class="fas fa-times me-1"></i> Hủy đơn</button>`;
-                }
-
-                html += `
-                <div class="order-card">
-                    <div class="order-header">
-                        <div>
-                            <h5 class="mb-1">Đơn hàng #${order.id}</h5>
-                            <small class="text-muted">Đặt ngày: ${dateStr}</small>
-                        </div>
-                        <span class="status-badge status-${order.status}">${statusTextMap[order.status]}</span>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-8">${productHtml}</div>
-                        <div class="col-md-4 text-end mt-3 mt-md-0 border-start ps-4">
-                            <p class="text-muted mb-1" style="font-size: 14px;">Tổng tiền:</p>
-                            <h4 class="mb-3" style="color: #2f5acf;">${parseInt(order.grand_total || order.total_money).toLocaleString('vi-VN')}đ</h4>
-                            <div class="d-flex gap-2 justify-content-end flex-wrap">${btnHtml}</div>
-                        </div>
-                    </div>
-                </div>`;
-            });
-        } else {
-            html = `
-            <div class="text-center py-5">
-                <i class="fas fa-box-open" style="font-size: 80px; color: #e2e8f0;"></i>
-                <h4 class="mt-3 text-muted">Chưa có đơn hàng nào</h4>
-                <p class="text-muted">Bạn chưa có đơn hàng nào trong trạng thái này.</p>
-                <a href="/web_qlsp/product_list_customer" class="btn btn-dark mt-3 px-4 rounded-pill">Tiếp tục mua sắm</a>
-            </div>`;
-        }
-
-        container.innerHTML = html;
-        document.getElementById('loading-skeleton').style.display = 'none';
-        container.style.display = 'block';
-    }
-
-    // 3. GẮN SỰ KIỆN CHUYỂN TAB VÀO URL (KHÔNG F5)
     document.querySelectorAll('.order-tab').forEach(tab => {
-        tab.addEventListener('click', function() {
-            const status = this.getAttribute('data-status');
-            const newUrl = window.location.pathname + (status ? '?status=' + status : '');
-            window.history.pushState({path: newUrl}, '', newUrl);
-            loadOrders();
-        });
+        tab.classList.remove('active');
+        if (tab.getAttribute('data-status') === currentStatus) tab.classList.add('active');
     });
 
-    window.addEventListener('popstate', loadOrders);
-    document.addEventListener("DOMContentLoaded", loadOrders);
+    document.getElementById('loading-skeleton').style.display = 'block';
+    document.getElementById('orders-container').style.display = 'none';
 
-    // ==========================================
-    // CÁC HÀM XỬ LÝ CHI TIẾT, HỦY, XÁC NHẬN
-    // ==========================================
+    fetch(`/web_qlsp/your_order/api_get_orders?status=${currentStatus}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('count-all').textContent = data.counts.all || 0;
+                document.getElementById('count-pending').textContent = data.counts.pending || 0;
+                document.getElementById('count-confirmed').textContent = data.counts.confirmed || 0;
+                document.getElementById('count-shipping').textContent = data.counts.shipping || 0;
+                document.getElementById('count-completed').textContent = data.counts.completed || 0;
+                document.getElementById('count-cancelled').textContent = data.counts.cancelled || 0;
 
-    function viewOrderDetail(orderId) {
+                renderOrders(data.orders);
+            } else {
+                Swal.fire('Lỗi', data.message, 'error');
+            }
+        })
+        .catch(() => {
+            document.getElementById('orders-container').innerHTML = 
+                '<div class="text-center py-5 text-danger">Lỗi kết nối máy chủ</div>';
+            document.getElementById('loading-skeleton').style.display = 'none';
+            document.getElementById('orders-container').style.display = 'block';
+        });
+}
+
+// =============================
+// RENDER ORDERS
+// =============================
+function renderOrders(orders) {
+    const container = document.getElementById('orders-container');
+    let html = '';
+
+    if (orders && orders.length > 0) {
+        orders.forEach(order => {
+            const firstItem = order.items?.[0];
+            const totalItems = order.total_items;
+            const dateStr = new Date(order.created_at).toLocaleString('vi-VN');
+
+            let productHtml = '';
+            if (firstItem) {
+                const img = firstItem.variant_image || firstItem.product_image;
+                const moreStr = totalItems > 1 
+                    ? `<p class="text-muted mt-2">+ ${totalItems - 1} sản phẩm khác</p>` 
+                    : '';
+
+                productHtml = `
+                <div class="order-product-item">
+                    <img src="/web_qlsp/Public/Picture/${img}" class="order-product-img">
+                    <div class="flex-grow-1">
+                        <h6>${firstItem.product_name}</h6>
+                        <p class="text-muted">
+                            SL: ${firstItem.quantity}
+                            ${firstItem.size ? ` | Size: ${firstItem.size}` : ''}
+                            ${firstItem.color ? ` | Màu: ${firstItem.color}` : ''}
+                        </p>
+                        <p class="fw-bold">${parseInt(firstItem.price).toLocaleString()}đ</p>
+                    </div>
+                </div>
+                ${moreStr}`;
+            }
+
+            let btnHtml = `
+                <button class="btn-view-detail" onclick="viewOrderDetail(${order.id})">
+                    Xem chi tiết
+                </button>
+            `;
+
+            // =========================
+            // 🔥 THANH TOÁN LẠI
+            // =========================
+            if (order.status === 'pending') {
+                const paymentMethod = (order.payment_method || 'cod').toLowerCase();
+
+                if (paymentMethod !== 'cod') {
+                    btnHtml += `
+                    <button class="btn-view-detail" 
+                        style="background:#ff9800;border:none"
+                        onclick="retryPayment(${order.id})">
+                        <i class="fas fa-credit-card me-1"></i> Thanh toán lại
+                    </button>`;
+                }
+
+                btnHtml += `
+                <button class="btn-cancel-order" onclick="cancelOrder(${order.id})">
+                    Hủy đơn
+                </button>`;
+            }
+
+            if (order.status === 'shipping') {
+                btnHtml += `
+                <button class="btn-confirm-order" onclick="confirmOrder(${order.id})">
+                    Đã nhận hàng
+                </button>`;
+            }
+
+            html += `
+            <div class="order-card">
+                <div class="order-header">
+                    <div>
+                        <h5>Đơn hàng #${order.id}</h5>
+                        <small>${dateStr}</small>
+                    </div>
+                    <span class="status-badge status-${order.status}">
+                        ${statusTextMap[order.status]}
+                    </span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-8">${productHtml}</div>
+                    <div class="col-md-4 text-end">
+                        <p class="text-muted">Tổng tiền</p>
+                        <h4>${parseInt(order.total_money || 0).toLocaleString()}đ</h4>
+                        <div class="d-flex gap-2 justify-content-end flex-wrap">
+                            ${btnHtml}
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        });
+    } else {
+        html = `
+        <div class="text-center py-5">
+            <h4>Chưa có đơn hàng</h4>
+        </div>`;
+    }
+
+    container.innerHTML = html;
+    document.getElementById('loading-skeleton').style.display = 'none';
+    container.style.display = 'block';
+}
+
+// =============================
+// 🔥 THANH TOÁN LẠI
+// =============================
+function retryPayment(orderId) {
+    Swal.fire({
+        title: 'Thanh toán lại?',
+        text: "Bạn sẽ được chuyển tới trang thanh toán VNPay",
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: 'Tiếp tục',
+        cancelButtonText: 'Hủy'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = '/web_qlsp/payment/create/' + orderId;
+        }
+    });
+}
+
+// =============================
+// VIEW DETAIL
+// =============================
+function viewOrderDetail(orderId) {
         document.getElementById('modal-order-id').textContent = orderId;
         document.getElementById('order-detail-content').innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
         new bootstrap.Modal(document.getElementById('orderDetailModal')).show();
@@ -255,8 +292,7 @@
             });
         }
         
-        const addressStr = `${order.shipping_address_detail || ''}, ${order.shipping_ward || order.ward_name || ''}, ${order.shipping_district || order.district_name || ''}, ${order.shipping_province || order.province_name || ''}`;
-
+const addressStr = `${order.shipping_address_detail || ''}, ${order.ward_name || order.shipping_ward || ''}, ${order.district_name || order.shipping_district || ''}, ${order.province_name || order.shipping_province || ''}`;
         document.getElementById('order-detail-content').innerHTML = `
             <div class="mb-4 p-3 bg-light rounded-3">
                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -315,25 +351,37 @@
         });
     }
 
-    function confirmOrder(orderId) {
-        Swal.fire({
-            title: 'Xác nhận đã nhận hàng?', text: "Bạn đã nhận được đầy đủ hàng và hài lòng với sản phẩm?", icon: 'question',
-            showCancelButton: true, confirmButtonColor: '#10b981', confirmButtonText: 'Đúng, tôi đã nhận'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire({ title: 'Đang cập nhật...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                const fd = new FormData(); fd.append('order_id', orderId);
-                
-                // ĐÃ XÓA CHỮ /Customer/ TẠI ĐÂY
-                fetch('/web_qlsp/your_order/confirm', { method: 'POST', body: fd })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire({ icon: 'success', title: 'Cảm ơn bạn!', timer: 1500, showConfirmButton: false });
-                        loadOrders(); // Load lại danh sách ngầm
-                    } else Swal.fire('Lỗi', data.message, 'error');
-                });
-            }
-        });
-    }
+// =============================
+// CONFIRM ORDER
+// =============================
+function confirmOrder(orderId) {
+    const fd = new FormData();
+    fd.append('order_id', orderId);
+
+    fetch('/web_qlsp/your_order/confirm', {
+        method: 'POST',
+        body: fd
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) loadOrders();
+        else Swal.fire('Lỗi', data.message, 'error');
+    });
+}
+
+// =============================
+// TAB CLICK
+// =============================
+document.querySelectorAll('.order-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        const status = this.getAttribute('data-status');
+        const newUrl = window.location.pathname + (status ? '?status=' + status : '');
+        window.history.pushState({}, '', newUrl);
+        loadOrders();
+    });
+});
+
+window.addEventListener('popstate', loadOrders);
+document.addEventListener("DOMContentLoaded", loadOrders);
+
 </script>
