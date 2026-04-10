@@ -126,6 +126,30 @@
         .toast-message { font-size: 14px; font-weight: 500; color: #333; }
         @keyframes slideInLeft { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
         @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
+        
+        /* ===== REVIEWS STYLE ===== */
+        .review-section { max-width: 100%; margin: 40px 0; background: #ffffff; padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .review-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 1px solid #f0f0f0; }
+        .review-header h3 { font-weight: 700; color: #1a1a1a; letter-spacing: -0.5px; }
+        .star-rating { display: flex; align-items: center; gap: 8px; color: #ffc107; font-weight: 600; background: #fff9e6; padding: 6px 14px; border-radius: 20px; }
+        .review-form { background: #f8f9fa; padding: 25px; border-radius: 12px; margin-bottom: 40px; border: 1px solid #edf2f7; }
+        .review-form h4 { margin-bottom: 15px; font-size: 16px; font-weight: 600; color: #4a5568; }
+        .star-input { display: flex; gap: 10px; margin-bottom: 20px; }
+        .star-input i { font-size: 28px; color: #d1d5db; cursor: pointer; transition: transform 0.2s, color 0.2s; }
+        .star-input i:hover { transform: scale(1.2); }
+        .star-input i.active { color: #ffc107; }
+        #reviewText { width: 100%; padding: 15px; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 15px; resize: vertical; font-size: 14px; transition: all 0.3s; background: #fff; }
+        #reviewText:focus { outline: none; border-color: #000; box-shadow: 0 0 0 3px rgba(0,0,0,0.05); }
+        #submitReview { background: #000; color: #fff; padding: 12px 30px; border-radius: 8px; border: none; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; }
+        #submitReview:hover { background: #333; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .review-item { display: flex; gap: 20px; padding: 25px 0; border-bottom: 1px solid #f1f5f9; transition: background 0.3s; }
+        .review-item:last-child { border-bottom: none; }
+        .review-avatar { width: 54px; height: 54px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .review-content { flex: 1; }
+        .review-name { font-weight: 700; color: #2d3748; font-size: 15px; margin-bottom: 4px; }
+        .review-content .star-rating-static { color: #ffc107; font-size: 13px; margin-bottom: 8px; }
+        .review-content p { color: #4a5568; line-height: 1.6; font-size: 14.5px; margin-top: 8px !important; }
+        .review-date { font-size: 12px; color: #a0aec0; margin-top: 10px; display: flex; align-items: center; gap: 5px; }
     </style>
 </head>
 
@@ -133,7 +157,6 @@
     <div id="toast-container"></div>
 
     <?php 
-    // Dữ liệu đã được chuẩn bị gọn gàng từ Controller
     $product = $data['product'] ?? null;
     if(!$product): 
     ?>
@@ -349,6 +372,35 @@
             <button class="product-desc-toggle" id="descToggle">XEM THÊM</button>
         </div>
         
+        <div class="review-section">
+            <div class="review-header">
+                <h3>Đánh giá từ khách hàng</h3>
+                <div id="avgRatingDisplay" class="star-rating"></div>
+            </div>
+
+            <div class="review-form">
+                <h4>Trải nghiệm của bạn thế nào?</h4>
+                <div class="star-input" id="starInput">
+                    <i class="fas fa-star active" data-val="1"></i>
+                    <i class="fas fa-star active" data-val="2"></i>
+                    <i class="fas fa-star active" data-val="3"></i>
+                    <i class="fas fa-star active" data-val="4"></i>
+                    <i class="fas fa-star active" data-val="5"></i>
+                </div>
+                <textarea id="reviewText" rows="3" placeholder="Ví dụ: Chất vải rất mềm mịn, giao hàng nhanh chóng..."></textarea>
+                <button type="button" id="submitReview">
+                    <i class="fas fa-paper-plane"></i> Gửi đánh giá ngay
+                </button>
+            </div>
+
+            <div id="reviewList">
+                <div style="text-align:center; padding:40px;">
+                    <div class="spinner-border text-dark" role="status"></div>
+                    <p style="color:#999; margin-top: 10px;">Đang tải những đánh giá mới nhất...</p>
+                </div>
+            </div>
+        </div>
+        
         <?php 
         $related_products = $data['related_products'] ?? [];
         if(count($related_products) > 0):
@@ -364,7 +416,7 @@
                     <div class="related-card">
                         <div class="cool-card">
                             <div class="cool-card-img-wrapper">
-                                <a href="/web_qlsp/Customer/product_detail?slug=<?= urlencode($rp['slug']) ?>">
+                                <a href="/web_qlsp/product_detail?slug=<?= urlencode($rp['slug']) ?>">
                                     <img src="/web_qlsp/Public/Picture/<?= htmlspecialchars($rp['thumbnail']) ?>" 
                                          class="product-image"
                                          data-product-id="<?= $rp['id'] ?>"
@@ -374,7 +426,7 @@
                             </div>
 
                             <div class="related-info">
-                                <a href="/web_qlsp/Customer/product_detail?slug=<?= urlencode($rp['slug']) ?>" class="related-name">
+                                <a href="/web_qlsp/product_detail?slug=<?= urlencode($rp['slug']) ?>" class="related-name">
                                     <?= htmlspecialchars($rp['name']) ?>
                                 </a>
 
@@ -404,7 +456,6 @@
     </div>
     
     <script>
-        // Hàm Toast Custom
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -419,7 +470,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', function(){
-            // Gallery
+            // Gallery & Variants Code (Giữ nguyên)
             const mainImage = document.getElementById('mainImage');
             const thumbsWrap = document.getElementById('thumbs');
             
@@ -434,7 +485,6 @@
             }
             bindThumbClick();
 
-            // Variant Switching
             const gallery = document.getElementById('gallery');
             const map = gallery ? JSON.parse(gallery.getAttribute('data-map') || '{}') : {};
             const colorImages = gallery ? JSON.parse(gallery.getAttribute('data-color-images') || '{}') : {};
@@ -517,7 +567,6 @@
                 });
             }
 
-            // QTY Control (Cho phép lên tới 2)
             const qtyInput = document.getElementById('qtyInput');
             document.getElementById('qtyMinus').addEventListener('click', function(e){
                 e.preventDefault();
@@ -527,71 +576,41 @@
             document.getElementById('qtyPlus').addEventListener('click', function(e){
                 e.preventDefault();
                 let val = parseInt(qtyInput.value) || 1;
-                qtyInput.value = Math.min(2, val + 1); // Giới hạn là 2
+                qtyInput.value = Math.min(2, val + 1); 
             });
 
-            // Add To Cart Fetch API
             const addToCartForm = document.getElementById('addToCartForm');
             if(addToCartForm) {
                 addToCartForm.addEventListener('submit', function(e) {
                     e.preventDefault();
-                    
                     const activeChip = document.querySelector('#sizeList .size-chip.active');
                     const qty = parseInt(qtyInput.value) || 1;
-
-                    // Kiểm tra tồn kho trên giao diện
                     if (activeChip) {
                         const stock = parseInt(activeChip.getAttribute('data-stock'));
-                        if (!isNaN(stock) && stock <= 0) { 
-                            showToast('Sản phẩm này tạm thời hết hàng!', 'error'); 
-                            return; 
-                        }
-                        if (!isNaN(stock) && qty > stock) { 
-                            showToast(`Chỉ còn ${stock} sản phẩm trong kho!`, 'warning'); 
-                            return; 
-                        }
+                        if (!isNaN(stock) && stock <= 0) { showToast('Sản phẩm tạm thời hết hàng!', 'error'); return; }
+                        if (!isNaN(stock) && qty > stock) { showToast(`Chỉ còn ${stock} sản phẩm!`, 'warning'); return; }
                     }
-                    
-                    // Lấy chính xác đường dẫn từ thuộc tính action của form (chống lỗi URL)
                     const actionUrl = this.getAttribute('action'); 
-                    
-                    fetch(actionUrl, {
-                        method: 'POST',
-                        body: new FormData(this)
-                    })
+                    fetch(actionUrl, { method: 'POST', body: new FormData(this) })
                     .then(async response => {
-                        if (!response.ok) throw new Error("Mã lỗi máy chủ: " + response.status);
+                        if (!response.ok) throw new Error("Lỗi máy chủ: " + response.status);
                         const text = await response.text();
-                        try {
-                            return JSON.parse(text);
-                        } catch (e) {
-                            console.error("Dữ liệu lỗi từ PHP:", text);
-                            throw new Error("Đường dẫn API sai hoặc PHP báo lỗi. Nhấn F12 xem chi tiết.");
-                        }
+                        try { return JSON.parse(text); } 
+                        catch (e) { throw new Error("Lỗi API (F12 để xem chi tiết)"); }
                     })
                     .then(data => {
                         if (data.success) {
-                            if (data.limit_reached) {
-                                showToast('Đã thêm (Đạt giới hạn tối đa 2 sản phẩm/loại)', 'warning');
-                            } else {
-                                showToast('Đã thêm vào giỏ hàng thành công!', 'success');
-                            }
-                            
-                            // Cập nhật số lượng trên icon Giỏ hàng
+                            showToast('Đã thêm vào giỏ hàng thành công!', 'success');
                             const countEl = document.getElementById('cart-count');
                             if (countEl && data.count !== undefined) countEl.textContent = data.count;
                         } else {
-                            showToast(data.message || 'Có lỗi xảy ra!', data.limit_reached ? 'warning' : 'error');
+                            showToast(data.message || 'Có lỗi xảy ra!', 'error');
                         }
                     })
-                    .catch(error => {
-                        console.error('Fetch error:', error);
-                        showToast('Lỗi kết nối server!', 'error');
-                    });
+                    .catch(error => { showToast(error.message, 'error'); });
                 });
             }
 
-            // Desc Toggle
             const toggleBtn = document.getElementById('descToggle');
             const content = document.getElementById('descContent');
             if(toggleBtn){
@@ -601,7 +620,6 @@
                 });
             }
             
-            // Related Swatches
             document.querySelectorAll('#relatedProducts .color-dot').forEach(dot => {
                 dot.addEventListener('click', function(e){
                     e.preventDefault();
@@ -624,7 +642,6 @@
             else carousel.scrollLeft += carousel.offsetWidth;
         }
 
-        // Kịch bản Size Advisor & Guide (Giữ nguyên)
         document.addEventListener('DOMContentLoaded', function(){
             const modal = document.getElementById('sizeAdvisorModal');
             const openBtn = document.getElementById('openSizeAdvisor');
@@ -663,7 +680,7 @@
                 for (const row of chart){
                     if (h>=row.h[0] && h<=row.h[1] && w>=row.w[0] && w<=row.w[1]) return row.size;
                 }
-                return 'M'; // Fallback
+                return 'M'; 
             }
 
             function renderRecommendation(){
@@ -693,344 +710,227 @@
                 if (el) { el.addEventListener('input', renderRecommendation); }
             });
         });
-    </script>
-    <style>
-    .review-section { max-width: 100%; margin: 30px 0; background: #fff; padding: 30px 40px; border-radius: 12px; font-family: Arial, sans-serif; }
-    .review-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px; }
-    .star-rating { color: #f1c40f; font-size: 16px; }
-    .review-form { margin-bottom: 30px; background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #eee;}
-    .review-form h4 { margin-top: 0; margin-bottom: 15px; font-size: 16px;}
-    .star-input { display: flex; gap: 8px; margin-bottom: 15px; cursor: pointer; }
-    .star-input i { font-size: 26px; color: #ddd; transition: 0.2s; }
-    .star-input i:hover, .star-input i.active { color: #f1c40f; }
-    .review-item { padding: 20px 0; border-bottom: 1px solid #eee; display: flex; gap: 15px; }
-    .review-item:last-child { border-bottom: none; }
-    .review-avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; background: #eee; border: 1px solid #ddd;}
-    .review-content { flex: 1; }
-    .review-name { font-weight: 700; font-size: 15px; margin-bottom: 6px; color: #333;}
-    .review-date { font-size: 12px; color: #999; margin-top: 8px; }
-    #reviewText { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px; resize: none; font-family: Arial, sans-serif;}
-    #reviewText:focus { outline: none; border-color: #2563eb; }
-</style>
-<style>
-    /* Tổng thể phần đánh giá */
-    .review-section {
-        max-width: 100%;
-        margin: 40px 0;
-        background: #ffffff;
-        padding: 30px;
-        border-radius: 16px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+        
+        // --- LOGIC ĐÁNH GIÁ SẢN PHẨM ---
+        document.addEventListener('DOMContentLoaded', function() {
+            const product_id = <?= $product['id'] ?>;
+            const currentUserId = <?= isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'null' ?>;
+            
+            let selectedRating = 5;
+            let editingReviewId = null;
 
-    /* Tiêu đề và điểm trung bình */
-    .review-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 30px;
-        padding-bottom: 15px;
-        border-bottom: 1px solid #f0f0f0;
-    }
-    
-    .review-header h3 {
-        font-weight: 700;
-        color: #1a1a1a;
-        letter-spacing: -0.5px;
-    }
-
-    .star-rating {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        color: #ffc107;
-        font-weight: 600;
-        background: #fff9e6;
-        padding: 6px 14px;
-        border-radius: 20px;
-    }
-
-    /* Form viết đánh giá */
-    .review-form {
-        background: #f8f9fa;
-        padding: 25px;
-        border-radius: 12px;
-        margin-bottom: 40px;
-        border: 1px solid #edf2f7;
-    }
-
-    .review-form h4 {
-        margin-bottom: 15px;
-        font-size: 16px;
-        font-weight: 600;
-        color: #4a5568;
-    }
-
-    /* Input chọn sao */
-    .star-input {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 20px;
-    }
-    
-    .star-input i {
-        font-size: 28px;
-        color: #d1d5db;
-        cursor: pointer;
-        transition: transform 0.2s, color 0.2s;
-    }
-    
-    .star-input i:hover {
-        transform: scale(1.2);
-    }
-    
-    .star-input i.active {
-        color: #ffc107;
-    }
-
-    /* Textarea và Nút gửi */
-    #reviewText {
-        width: 100%;
-        padding: 15px;
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        margin-bottom: 15px;
-        resize: vertical;
-        font-size: 14px;
-        transition: all 0.3s;
-        background: #fff;
-    }
-
-    #reviewText:focus {
-        outline: none;
-        border-color: #000;
-        box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
-    }
-
-    #submitReview {
-        background: #000;
-        color: #fff;
-        padding: 12px 30px;
-        border-radius: 8px;
-        border: none;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        cursor: pointer;
-        transition: all 0.3s;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    #submitReview:hover {
-        background: #333;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-
-    /* Danh sách đánh giá */
-    .review-item {
-        display: flex;
-        gap: 20px;
-        padding: 25px 0;
-        border-bottom: 1px solid #f1f5f9;
-        transition: background 0.3s;
-    }
-    
-    .review-item:last-child {
-        border-bottom: none;
-    }
-
-    .review-avatar {
-        width: 54px;
-        height: 54px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 2px solid #fff;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    .review-content {
-        flex: 1;
-    }
-
-    .review-name {
-        font-weight: 700;
-        color: #2d3748;
-        font-size: 15px;
-        margin-bottom: 4px;
-    }
-
-    .review-content .star-rating-static {
-        color: #ffc107;
-        font-size: 13px;
-        margin-bottom: 8px;
-    }
-
-    .review-content p {
-        color: #4a5568;
-        line-height: 1.6;
-        font-size: 14.5px;
-        margin-top: 8px !important;
-    }
-
-    .review-date {
-        font-size: 12px;
-        color: #a0aec0;
-        margin-top: 10px;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-</style>
-
-<div class="review-section">
-    <div class="review-header">
-        <h3>Đánh giá từ khách hàng</h3>
-        <div id="avgRatingDisplay" class="star-rating">
-            </div>
-    </div>
-
-    <div class="review-form">
-        <h4>Trải nghiệm của bạn thế nào?</h4>
-        <div class="star-input" id="starInput">
-            <i class="fas fa-star active" data-val="1"></i>
-            <i class="fas fa-star active" data-val="2"></i>
-            <i class="fas fa-star active" data-val="3"></i>
-            <i class="fas fa-star active" data-val="4"></i>
-            <i class="fas fa-star active" data-val="5"></i>
-        </div>
-        <textarea id="reviewText" rows="3" placeholder="Ví dụ: Chất vải rất mềm mịn, giao hàng nhanh chóng..."></textarea>
-        <button type="button" id="submitReview">
-            <i class="fas fa-paper-plane"></i> Gửi đánh giá ngay
-        </button>
-    </div>
-
-    <div id="reviewList">
-        <div style="text-align:center; padding:40px;">
-            <div class="spinner-border text-dark" role="status"></div>
-            <p style="color:#999; margin-top: 10px;">Đang tải những đánh giá mới nhất...</p>
-        </div>
-    </div>
-</div>
-
-<script>
-// TOÀN BỘ LOGIC JAVASCRIPT CỦA BẠN ĐƯỢC GIỮ NGUYÊN 100%
-document.addEventListener('DOMContentLoaded', function() {
-    const product_id = <?= $product['id'] ?>;
-    let selectedRating = 5;
-
-    const stars = document.querySelectorAll('#starInput i');
-    
-    function updateStars(val) {
-        stars.forEach(s => {
-            if (parseInt(s.getAttribute('data-val')) <= val) {
-                s.classList.add('active');
-            } else {
-                s.classList.remove('active');
+            const stars = document.querySelectorAll('#starInput i');
+            
+            function updateStars(val) {
+                stars.forEach(s => {
+                    if (parseInt(s.getAttribute('data-val')) <= val) {
+                        s.classList.add('active');
+                    } else {
+                        s.classList.remove('active');
+                    }
+                });
             }
-        });
-    }
 
-    stars.forEach(s => {
-        s.addEventListener('click', function() {
-            selectedRating = parseInt(this.getAttribute('data-val'));
-            updateStars(selectedRating);
-        });
-    });
-
-    function loadReviews() {
-        fetch(`/web_qlsp/reviews/api_get_by_product?product_id=${product_id}`)
-            .then(res => res.json())
-            .then(data => {
-                const list = document.getElementById('reviewList');
-                const avgDisplay = document.getElementById('avgRatingDisplay');
-                
-                if(data.data && data.data.length > 0) {
-                    list.innerHTML = '';
-                    let totalStars = 0;
-
-                    data.data.forEach(r => {
-                        const rate = parseInt(r.rating);
-                        totalStars += rate;
-                        
-                        const starHtml = '<i class="fas fa-star"></i>'.repeat(rate) + 
-                                         '<i class="far fa-star" style="color:#ddd"></i>'.repeat(5 - rate);
-                        
-                        const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(r.full_name)}&background=random&color=fff&size=100`;
-                        const avatarSrc = (r.avatar && r.avatar.trim() !== '') ? `/web_qlsp/Public/Picture/users/${r.avatar}` : defaultAvatar;
-
-                        list.innerHTML += `
-                            <div class="review-item">
-                                <img src="${avatarSrc}" class="review-avatar" 
-                                     onerror="this.onerror=null; this.src='${defaultAvatar}';">
-                                <div class="review-content">
-                                    <div class="review-name">${r.full_name}</div>
-                                    <div class="star-rating-static">${starHtml}</div>
-                                    <p>${r.comment}</p>
-                                    <div class="review-date"><i class="far fa-clock"></i> Đã đánh giá vào ${r.review_date}</div>
-                                </div>
-                            </div>
-                        `;
-                    });
-
-                    const avg = (totalStars / data.data.length).toFixed(1);
-                    avgDisplay.innerHTML = `<strong>${avg}/5</strong> <i class="fas fa-star"></i> (${data.data.length} đánh giá)`;
-
-                } else {
-                    list.innerHTML = '<div style="text-align:center; color:#999; padding:40px; font-style:italic;">Sản phẩm này chưa có đánh giá. Hãy trở thành người đầu tiên!</div>';
-                    avgDisplay.innerHTML = '';
-                }
-            })
-            .catch(err => {
-                console.error("Lỗi khi tải đánh giá:", err);
-                document.getElementById('reviewList').innerHTML = '<div style="color:red; padding:10px; text-align:center;">Không thể tải dữ liệu đánh giá lúc này.</div>';
+            stars.forEach(s => {
+                s.addEventListener('click', function() {
+                    selectedRating = parseInt(this.getAttribute('data-val'));
+                    updateStars(selectedRating);
+                });
             });
-    }
 
-    loadReviews();
+            window.loadReviews = function() {
+                fetch(`/web_qlsp/reviews/api_get_by_product?product_id=${product_id}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        const list = document.getElementById('reviewList');
+                        const avgDisplay = document.getElementById('avgRatingDisplay');
+                        
+                        if(data.data && data.data.length > 0) {
+                            list.innerHTML = '';
+                            let totalStars = 0;
 
-    document.getElementById('submitReview').addEventListener('click', function() {
-        const comment = document.getElementById('reviewText').value;
-        if(!comment.trim()) { 
-            if(typeof showToast === 'function') showToast('Vui lòng nhập nội dung đánh giá!', 'warning');
-            else alert('Vui lòng nhập nội dung đánh giá!');
-            return; 
-        }
+                            data.data.forEach(r => {
+                                const rate = parseInt(r.rating);
+                                totalStars += rate;
+                                
+                                const starHtml = '<i class="fas fa-star"></i>'.repeat(rate) + 
+                                                 '<i class="far fa-star" style="color:#ddd"></i>'.repeat(5 - rate);
+                                
+                                const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(r.full_name)}&background=random&color=fff&size=100`;
+                                const avatarSrc = (r.avatar && r.avatar.trim() !== '') ? `/web_qlsp/Public/Picture/users/${r.avatar}` : defaultAvatar;
 
-        const formData = new FormData();
-        formData.append('product_id', product_id);
-        formData.append('rating', selectedRating);
-        formData.append('comment', comment);
+                                let userActionsHtml = '';
+                                if (currentUserId && parseInt(r.user_id) === currentUserId) {
+                                    const safeComment = r.comment.replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n');
+                                    userActionsHtml = `
+                                        <div style="margin-top: 12px; display: flex; gap: 15px;">
+                                            <button onclick="startEditReview(${r.id}, ${r.rating}, '${safeComment}')" 
+                                                    style="background:none; border:none; color:#2563eb; font-size:13px; font-weight:600; cursor:pointer; padding:0;">
+                                                <i class="fas fa-edit"></i> Sửa đánh giá
+                                            </button>
+                                            <button onclick="deleteMyReview(${r.id})" 
+                                                    style="background:none; border:none; color:#e74c3c; font-size:13px; font-weight:600; cursor:pointer; padding:0;">
+                                                <i class="fas fa-trash-alt"></i> Xóa
+                                            </button>
+                                        </div>
+                                    `;
+                                }
 
-        fetch('/web_qlsp/reviews/add', { 
-            method: 'POST', 
-            body: formData 
-        })
-        .then(res => res.json())
-        .then(data => {
-            if(data.success) {
-                if(typeof showToast === 'function') showToast(data.message, 'success');
-                else alert(data.message);
-                
-                document.getElementById('reviewText').value = '';
-                updateStars(5);
-                selectedRating = 5;
-                loadReviews();
-            } else {
-                if(typeof showToast === 'function') showToast(data.message, 'error');
-                else alert(data.message);
+                                list.innerHTML += `
+                                    <div class="review-item">
+                                        <img src="${avatarSrc}" class="review-avatar" onerror="this.onerror=null; this.src='${defaultAvatar}';">
+                                        <div class="review-content">
+                                            <div class="review-name">${r.full_name}</div>
+                                            <div class="star-rating-static">${starHtml}</div>
+                                            <p>${r.comment}</p>
+                                            <div class="review-date"><i class="far fa-clock"></i> Đã đánh giá vào ${r.review_date}</div>
+                                            ${userActionsHtml}
+                                        </div>
+                                    </div>
+                                `;
+                            });
+
+                            const avg = (totalStars / data.data.length).toFixed(1);
+                            avgDisplay.innerHTML = `<strong>${avg}/5</strong> <i class="fas fa-star"></i> (${data.data.length} đánh giá)`;
+
+                        } else {
+                            list.innerHTML = '<div style="text-align:center; color:#999; padding:40px; font-style:italic;">Sản phẩm này chưa có đánh giá. Hãy trở thành người đầu tiên!</div>';
+                            avgDisplay.innerHTML = '';
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Lỗi khi tải đánh giá:", err);
+                        document.getElementById('reviewList').innerHTML = '<div style="color:red; padding:10px; text-align:center;">Không thể tải dữ liệu đánh giá lúc này.</div>';
+                    });
             }
-        })
-        .catch(err => {
-            console.error("Lỗi gửi đánh giá:", err);
-            if(typeof showToast === 'function') showToast('Lỗi kết nối máy chủ!', 'error');
-            else alert('Lỗi kết nối máy chủ!');
+
+            loadReviews();
+
+            window.startEditReview = function(id, rating, comment) {
+                editingReviewId = id;
+                selectedRating = rating;
+                updateStars(rating);
+                document.getElementById('reviewText').value = comment;
+                
+                const submitBtn = document.getElementById('submitReview');
+                submitBtn.innerHTML = '<i class="fas fa-save"></i> Cập nhật đánh giá';
+                submitBtn.style.background = '#2563eb'; 
+                
+                let cancelBtn = document.getElementById('cancelEditBtn');
+                if(!cancelBtn) {
+                    cancelBtn = document.createElement('button');
+                    cancelBtn.id = 'cancelEditBtn';
+                    cancelBtn.type = 'button';
+                    cancelBtn.innerHTML = '<i class="fas fa-times"></i> Hủy';
+                    cancelBtn.style = 'background: #f1f5f9; color: #475569; padding: 12px 20px; border-radius: 8px; border: none; font-weight: 600; margin-left: 10px; cursor: pointer; transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 1px;';
+                    cancelBtn.onclick = cancelEditMode;
+                    submitBtn.parentNode.insertBefore(cancelBtn, submitBtn.nextSibling);
+                }
+                cancelBtn.style.display = 'inline-flex';
+                
+                document.querySelector('.review-form').scrollIntoView({behavior: 'smooth', block: 'center'});
+            };
+
+            window.cancelEditMode = function() {
+                editingReviewId = null;
+                selectedRating = 5;
+                updateStars(5);
+                document.getElementById('reviewText').value = '';
+                
+                const submitBtn = document.getElementById('submitReview');
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Gửi đánh giá ngay';
+                submitBtn.style.background = '#000';
+                
+                const cancelBtn = document.getElementById('cancelEditBtn');
+                if(cancelBtn) cancelBtn.style.display = 'none';
+            };
+
+            window.deleteMyReview = function(id) {
+                if(confirm('Bạn có chắc chắn muốn xóa đánh giá này? Dữ liệu không thể khôi phục.')) {
+                    fetch(`/web_qlsp/reviews/delete_user/${id}`)
+                    .then(async res => {
+                        if (!res.ok) throw new Error("Lỗi HTTP: " + res.status);
+                        const text = await res.text();
+                        try { return JSON.parse(text); } 
+                        catch (e) { console.error("Lỗi PHP:", text); throw new Error("Lỗi Server. F12 để xem chi tiết."); }
+                    })
+                    .then(data => {
+                        if(data.success) {
+                            if(typeof showToast === 'function') showToast(data.message, 'success');
+                            else alert(data.message);
+                            loadReviews();
+                        } else {
+                            if(typeof showToast === 'function') showToast(data.message, 'error');
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Lỗi gửi request:", err);
+                        if(typeof showToast === 'function') showToast(err.message, 'error');
+                    });
+                }
+            };
+
+            document.getElementById('submitReview').addEventListener('click', function() {
+                const comment = document.getElementById('reviewText').value;
+                if(!comment.trim()) { 
+                    if(typeof showToast === 'function') showToast('Vui lòng nhập nội dung!', 'warning');
+                    return; 
+                }
+
+                // Vô hiệu hóa nút và hiện text đang xử lý
+                const submitBtn = this;
+                const originalText = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+
+                const formData = new FormData();
+                formData.append('rating', selectedRating);
+                formData.append('comment', comment);
+
+                let url = '/web_qlsp/reviews/add';
+                
+                if (editingReviewId) {
+                    url = '/web_qlsp/reviews/edit_user';
+                    formData.append('review_id', editingReviewId);
+                } else {
+                    formData.append('product_id', product_id);
+                }
+
+                fetch(url, { method: 'POST', body: formData })
+                .then(async res => {
+                    if (!res.ok) throw new Error("Lỗi HTTP: " + res.status);
+                    const text = await res.text();
+                    try {
+                        return JSON.parse(text); // Dịch JSON
+                    } catch (e) {
+                        console.error("Lỗi PHP trả về mã HTML:", text); 
+                        throw new Error("Dữ liệu trả về không phải JSON. Hãy xem Tab Console (F12).");
+                    }
+                })
+                .then(data => {
+                    // Mở khóa nút
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+
+                    if(data.success) {
+                        if(typeof showToast === 'function') showToast(data.message, 'success');
+                        cancelEditMode(); 
+                        loadReviews();
+                    } else {
+                        if(typeof showToast === 'function') showToast(data.message, 'error');
+                        else alert(data.message);
+                    }
+                })
+                .catch(err => {
+                    // Lỗi văng ra sẽ được in ở đây
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                    console.error("Lỗi gửi đánh giá:", err);
+                    if(typeof showToast === 'function') showToast(err.message, 'error');
+                    else alert(err.message);
+                });
+            });
         });
-    });
-});
-</script>
+    </script>
 </body>
 </html>

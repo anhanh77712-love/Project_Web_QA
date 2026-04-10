@@ -4,10 +4,6 @@ class reviews_m extends connectDB {
         parent::__construct();
     }
 
-    // =========================================================
-    // DÀNH CHO KHÁCH HÀNG (FRONTEND)
-    // =========================================================
-
     // Lấy danh sách đánh giá của 1 sản phẩm
     function reviews_selectByProduct($product_id) {
         $product_id = intval($product_id);
@@ -39,18 +35,17 @@ class reviews_m extends connectDB {
         $result = mysqli_query($this->con, $sql);
         if ($result && mysqli_num_rows($result) > 0) {
             $row = mysqli_fetch_assoc($result);
-            return $row['id']; // Trả về order_id
+            return $row['id'];
         }
         return false;
     }
 
-    // Thêm đánh giá mới
+    // Thêm đánh giá mới (Hoàn toàn sạch bóng edit_count)
     function reviews_insert($user_id, $product_id, $order_id, $rating, $comment) {
         $user_id = intval($user_id);
         $product_id = intval($product_id);
         $order_id = intval($order_id);
         $rating = intval($rating);
-        // Chống lỗi ngoặc kép/ngoặc đơn phá SQL
         $comment_safe = mysqli_real_escape_string($this->con, $comment);
         
         $sql = "INSERT INTO reviews (user_id, product_id, order_id, rating, comment, status) 
@@ -58,12 +53,34 @@ class reviews_m extends connectDB {
         return mysqli_query($this->con, $sql);
     }
 
-    // =========================================================
-    // DÀNH CHO ADMIN (BACKEND)
-    // =========================================================
+    // Lấy 1 đánh giá cụ thể (dùng để check quyền)
+    function reviews_getById($id) {
+        return mysqli_query($this->con, "SELECT * FROM reviews WHERE id = " . intval($id));
+    }
 
+    // Khách hàng tự cập nhật đánh giá (Hoàn toàn sạch bóng edit_count)
+    function reviews_update_by_user($id, $user_id, $rating, $comment) {
+        $id = intval($id); 
+        $user_id = intval($user_id); 
+        $rating = intval($rating);
+        $comment_safe = mysqli_real_escape_string($this->con, $comment);
+        
+        $sql = "UPDATE reviews 
+                SET rating = $rating, comment = '$comment_safe' 
+                WHERE id = $id AND user_id = $user_id";
+        return mysqli_query($this->con, $sql);
+    }
+
+    // Khách hàng tự xóa đánh giá
+    function reviews_delete_by_user($id, $user_id) {
+        $id = intval($id); 
+        $user_id = intval($user_id);
+        $sql = "DELETE FROM reviews WHERE id = $id AND user_id = $user_id";
+        return mysqli_query($this->con, $sql);
+    }
+
+    // DÀNH CHO ADMIN
     function reviews_selectAllAdmin() {
-        // Bổ sung thêm p.slug và p.thumbnail
         $sql = "SELECT r.*, u.full_name, p.name as product_name, p.slug, p.thumbnail 
                 FROM reviews r 
                 JOIN users u ON r.user_id = u.id 
