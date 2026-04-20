@@ -55,7 +55,7 @@
 <form id="formSearch" class="d-flex align-items-center gap-2 mb-3">
 	<div class="input-group" style="max-width: 360px;">
 		<span class="input-group-text"><i class="fas fa-search"></i></span>
-		<input type="text" id="q" class="form-control" placeholder="Tìm theo tên/SPU/SKU">
+		<input type="text" id="q" class="form-control" placeholder="Tìm theo tên sản phẩm...">
 	</div>
 	<select id="category" class="form-select" style="max-width: 220px;">
 		<option value="">Tất cả danh mục</option>
@@ -71,8 +71,6 @@
 	<button class="btn btn-outline-secondary" type="button" onclick="resetFilters()"><i class="fas fa-undo me-2"></i>Đặt lại</button>
 
     <div class="ms-auto d-flex gap-2">
-        <button type="button" class="btn btn-success" onclick="exportExcel()"><i class="fas fa-file-excel me-2"></i>Xuất Excel</button>
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#importModal"><i class="fas fa-file-import me-2"></i>Nhập Excel</button>
     </div>
 </form>
 
@@ -140,15 +138,6 @@
                         </div>
                         <small class="text-muted mt-1 d-block"><i class="fas fa-info-circle"></i> Nhập số <b>dương</b> để cộng thêm kho, số <b>âm</b> để trừ đi.</small>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Lý do điều chỉnh</label>
-                        <select id="adj_reason" name="reason" class="form-select">
-                            <option value="stock_count">Kiểm kho định kỳ</option>
-                            <option value="receive">Nhập hàng mới</option>
-                            <option value="damage">Hư hỏng / Mất mát</option>
-                            <option value="other">Khác</option>
-                        </select>
-                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
@@ -159,54 +148,7 @@
 	</div>
 </div>
 
-<div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
-	<div class="modal-dialog modal-lg">
-		<div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title fw-bold"><i class="fas fa-file-import me-2"></i>Nhập tồn kho từ Excel</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4">
-                <div class="alert alert-info">
-                    <strong><i class="fas fa-lightbulb text-warning"></i> Hướng dẫn định dạng:</strong>
-                    <ul class="mb-0 mt-2">
-                        <li>File cần có đuôi <b>.xlsx</b> hoặc <b>.xls</b>.</li>
-                        <li>Cần có cột <b>SKU</b> (Mã biến thể sản phẩm).</li>
-                        <li>Cần có cột <b>Stock</b> hoặc <b>NewStock</b> (Số lượng tồn kho thực tế muốn cập nhật).</li>
-                        <li>Hệ thống sẽ tự động tính chênh lệch và cập nhật kho.</li>
-                    </ul>
-                </div>
 
-                <form id="formImportExcel">
-                    <div class="mb-4">
-                        <label class="form-label fw-bold">Chọn tệp Excel</label>
-                        <input type="file" name="file" class="form-control" accept=".xlsx,.xls" required>
-                    </div>
-                    <div class="d-flex justify-content-end">
-                        <button type="submit" class="btn btn-success fw-bold px-4"><i class="fas fa-upload me-2"></i> Tiến hành Nhập</button>
-                    </div>
-                </form>
-
-                <div id="importResultArea" style="display: none;" class="mt-4">
-                    <hr>
-                    <h6 class="fw-bold text-success mb-3">Kết quả cập nhật:</h6>
-                    <div class="d-flex gap-3 mb-3">
-                        <span class="badge bg-success fs-6" id="res_updated">Cập nhật: 0</span>
-                        <span class="badge bg-danger fs-6" id="res_failed">Thất bại: 0</span>
-                    </div>
-                    <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
-                        <table class="table table-sm table-bordered">
-                            <thead class="table-light" style="position: sticky; top: 0;">
-                                <tr><th>SKU</th><th>Trạng thái</th><th>Tồn cũ</th><th>Tồn mới</th></tr>
-                            </thead>
-                            <tbody id="importDetailsBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-		</div>
-	</div>
-</div>
 
 <link rel="stylesheet" href="/web_qlsp/Public/css/loading.css">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -275,7 +217,7 @@
                                         <div class="fw-bold">${it.product_name || 'Không tên'}</div>
                                         <small class="text-muted"><i class="fas fa-folder"></i> ${it.category_name || '--'}</small>
                                     </td>
-                                    <td><span class="badge bg-light text-dark border">${variantStr || 'Mặc định'}</span><br><small class="text-muted">SKU: ${it.sku || '--'}</small></td>
+                                    <td><span class="badge bg-light text-dark border">${variantStr || 'Mặc định'}</span></td>
                                     <td>${formatMoney(it.cost_price)}</td>
                                     <td class="fw-bold">${formatNum(it.stock_quantity)}</td>
                                     <td>
@@ -358,45 +300,5 @@
             });
     });
 
-    // 4. IMPORT EXCEL VÀO KHO
-    document.getElementById('formImportExcel').addEventListener('submit', function(e) {
-        e.preventDefault();
-        Swal.fire({ title: 'Đang đọc file Excel...', text: 'Hệ thống đang quét kho, vui lòng chờ!', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
-        fetch(`${API_BASE}/api_import_excel`, { method: 'POST', body: new FormData(this) })
-            .then(res => res.json())
-            .then(data => {
-                Swal.close();
-                if (data.success) {
-                    const r = data.results;
-                    document.getElementById('res_updated').textContent = `Cập nhật: ${r.updated}`;
-                    document.getElementById('res_failed').textContent = `Thất bại/Bỏ qua: ${r.failed}`;
-                    
-                    let tbody = '';
-                    r.details.forEach(d => {
-                        let stClass = d.status === 'Cập nhật' ? 'text-success fw-bold' : (d.status === 'Không thay đổi' ? 'text-muted' : 'text-danger');
-                        tbody += `<tr>
-                            <td>${d.sku}</td>
-                            <td class="${stClass}">${d.status}</td>
-                            <td>${d.from !== undefined ? d.from : '-'}</td>
-                            <td>${d.to !== undefined ? d.to : '-'}</td>
-                        </tr>`;
-                    });
-                    document.getElementById('importDetailsBody').innerHTML = tbody;
-                    document.getElementById('importResultArea').style.display = 'block';
-
-                    loadData(); // Refresh nền bảng kho
-                } else {
-                    Swal.fire('Lỗi Import', data.message, 'error');
-                }
-            });
-    });
-
-    // 5. XUẤT EXCEL
-    function exportExcel() {
-        const q = encodeURIComponent(document.getElementById('q').value);
-        const cat = document.getElementById('category').value;
-        const st = document.getElementById('stockStatus').value;
-        window.location.href = `${API_BASE}/export_excel?q=${q}&category=${cat}&status=${st}`;
-    }
 </script>

@@ -32,13 +32,11 @@ class warehouse extends controllers {
             // Lấy danh sách sản phẩm trong kho (Model này trả về mảng Array)
             $items = $this->m->warehouse_selectItems($q, $category, $status);
             
-            // Lấy danh mục để đổ vào Select (Model này trả về mysqli_result)
-            $categories = [];
-            $cat_res = $this->m->categories_selectAll();
-            if ($cat_res && is_object($cat_res) && mysqli_num_rows($cat_res) > 0) {
-                while ($c = mysqli_fetch_assoc($cat_res)) {
+            // Lấy danh mục để đổ vào Select (Model này trả về mảng Array)
+            $categories = $this->m->categories_selectAll();
+            if (is_array($categories) && count($categories) > 0) {
+                foreach ($categories as &$c) {
                     $c['name'] = mb_convert_encoding($c['name'], 'UTF-8', 'UTF-8');
-                    $categories[] = $c;
                 }
             }
 
@@ -142,132 +140,6 @@ class warehouse extends controllers {
         exit;
     }
 
-    // 4. API IMPORT EXCEL KHO HÀNG
-    function api_import_excel() {
-        $this->setApiHeader();
 
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_FILES['file']['tmp_name'])) {
-            echo json_encode(['success' => false, 'message' => 'Vui lòng chọn tệp Excel để nhập']); exit;
-        }
-
-        $tmp = $_FILES['file']['tmp_name'];
-        
-        try {
-            if (!class_exists('PHPExcel_IOFactory')) require_once "./MVC/Bridge.php";
-            $objPHPExcel = PHPExcel_IOFactory::load($tmp);
-        } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => 'Không thể đọc tệp Excel: ' . $e->getMessage()]); exit;
-        }
-
-        $sheet = $objPHPExcel->getActiveSheet();
-        $highestRow = $sheet->getHighestRow();
-        $highestColumn = $sheet->getHighestColumn();
-
-        // Map header columns
-        $headers = [];
-        $headerRow = 1;
-        foreach (range('A', $highestColumn) as $col) {
-            $val = trim((string)$sheet->getCell($col . $headerRow)->getValue());
-            if ($val !== '') { $headers[$col] = mb_strtolower($val); }
-        }
-
-        // Tìm cột SKU và Tồn kho mới
-        $colSku = null; $colNewStock = null;
-        foreach ($headers as $col => $name) {
-            if ($name === 'sku') $colSku = $col;
-            if ($name === 'newstock' || $name === 'new stock' || $name === 'stock' || $name === 'tồn kho mới') $colNewStock = $col;
-        }
-
-        if (!$colSku || !$colNewStock) {
-            echo json_encode(['success' => false, 'message' => 'Không tìm thấy cột bắt buộc: SKU và NewStock/Stock/Tồn kho mới trong file Excel.']); exit;
-        }
-
-        $results = ['updated' => 0, 'failed' => 0, 'details' => []];
-
-        for ($row = $headerRow + 1; $row <= $highestRow; $row++) {
-            $sku = trim((string)$sheet->getCell($colSku . $row)->getValue());
-            $newStockRaw = $sheet->getCell($colNewStock . $row)->getValue();
-            if ($sku === '' && ($newStockRaw === '' || $newStockRaw === null)) { continue; }
-            $newStock = intval($newStockRaw);
-
-            $variant = $this->m->variant_by_sku($sku);
-            if (!$variant) {
-                $results['failed']++;
-                $results['details'][] = ['sku' => $sku, 'status' => 'Không tìm thấy biến thể'];
-                continue;
-            }
-
-            $current = intval($variant['stock'] ?? 0);
-            $delta = $newStock - $current;
-
-            if ($delta === 0) {
-                $results['details'][] = ['sku' => $sku, 'status' => 'Không thay đổi'];
-                continue;
-            }
-
-            $ok = $this->m->warehouse_adjustStock(intval($variant['product_id']), intval($variant['id']), $delta);
-            if ($ok) {
-                $results['updated']++;
-                $results['details'][] = ['sku' => $sku, 'status' => 'Cập nhật', 'from' => $current, 'to' => $newStock];
-            } else {
-                $results['failed']++;
-                $results['details'][] = ['sku' => $sku, 'status' => 'Lỗi cập nhật DB'];
-            }
-        }
-
-        echo json_encode(['success' => true, 'message' => 'Xử lý file hoàn tất', 'results' => $results]);
-        exit;
-    }
-
-    // 5. XUẤT EXCEL (Giữ nguyên)
-    function export_excel() {
-        if (!class_exists('PHPExcel')) require_once "./MVC/Bridge.php";
-
-        $q = isset($_GET['q']) ? trim($_GET['q']) : '';
-        $category = isset($_GET['category']) ? trim($_GET['category']) : '';
-        $status = isset($_GET['status']) ? trim($_GET['status']) : '';
-        $items = $this->m->warehouse_selectItems($q, $category, $status);
-
-        if (!$items || count($items) === 0) {
-            echo "<script>alert('Không có dữ liệu để xuất!'); window.history.back();</script>"; return;
-        }
-
-        $objPHPExcel = new PHPExcel();
-        $objPHPExcel->setActiveSheetIndex(0);
-        $sheet = $objPHPExcel->getActiveSheet();
-        
-        $headers = ['A'=>'Sản phẩm', 'B'=>'Biến thể', 'C'=>'SKU', 'D'=>'Danh mục', 'E'=>'Tồn kho', 'F'=>'Đang giữ', 'G'=>'Sẵn có', 'H'=>'Ngưỡng cảnh báo', 'I'=>'Giá nhập'];
-        foreach ($headers as $col => $title) {
-            $sheet->setCellValue($col.'1', $title);
-        }
-        $sheet->getStyle('A1:I1')->getFont()->setBold(true);
-
-        $row = 2;
-        if($items && mysqli_num_rows($items) > 0) {
-            while ($it = mysqli_fetch_assoc($items)) {
-                $available = max(0, intval($it['stock_quantity'] ?? 0) - intval($it['reserved_quantity'] ?? 0));
-                $variantLabel = trim(($it['color'] ?? '') . ((isset($it['size']) && $it['size']!=='') ? (' / ' . $it['size']) : ''));
-                $sheet->setCellValue('A'.$row, $it['product_name'] ?? '');
-                $sheet->setCellValue('B'.$row, $variantLabel);
-                $sheet->setCellValue('C'.$row, $it['sku'] ?? '');
-                $sheet->setCellValue('D'.$row, $it['category_name'] ?? '');
-                $sheet->setCellValue('E'.$row, intval($it['stock_quantity'] ?? 0));
-                $sheet->setCellValue('F'.$row, intval($it['reserved_quantity'] ?? 0));
-                $sheet->setCellValue('G'.$row, $available);
-                $sheet->setCellValue('H'.$row, intval($it['threshold'] ?? 5));
-                $sheet->setCellValue('I'.$row, floatval($it['cost_price'] ?? 0));
-                $row++;
-            }
-        }
-        foreach (range('A','I') as $col) { $sheet->getColumnDimension($col)->setAutoSize(true); }
-
-        $filename = 'Kho_hang_' . date('Ymd_His') . '.xlsx';
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment;filename="' . $filename . '"');
-        header('Cache-Control: max-age=0');
-        $objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
-        $objWriter->save('php://output');
-        exit();
-    }
 }
 ?>

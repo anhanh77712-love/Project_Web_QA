@@ -64,7 +64,7 @@ class warehouse_m extends connectDB {
         if (!empty($q)) {
             $q = mysqli_real_escape_string($this->con, $q);
             $like = "%$q%";
-            $sql .= " AND (p.name LIKE '$like' OR pv.color LIKE '$like' OR pv.size LIKE '$like' OR p.slug LIKE '$like')";
+            $sql .= " AND p.name LIKE '$like'";
         }
         if (!empty($status)) {
             // Apply status filter based on stock vs threshold from variant stock only
@@ -100,26 +100,7 @@ class warehouse_m extends connectDB {
         }
     }
 
-    // Resolve variant by SKU string (expects format 'PV-<id>') or raw numeric id
-    function variant_by_sku($sku) {
-        $sku = trim($sku);
-        $variant_id = null;
-        if ($sku === '') return null;
-        if (preg_match('/^PV-(\d+)$/i', $sku, $m)) {
-            $variant_id = intval($m[1]);
-        } elseif (ctype_digit($sku)) {
-            $variant_id = intval($sku);
-        } else {
-            return null;
-        }
 
-        $sql = "SELECT pv.id, pv.product_id, pv.stock FROM product_variants pv WHERE pv.id = $variant_id";
-        $res = mysqli_query($this->con, $sql);
-        if ($res && mysqli_num_rows($res) > 0) {
-            return mysqli_fetch_assoc($res);
-        }
-        return null;
-    }
     
 }
 ?>
