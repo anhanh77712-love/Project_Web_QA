@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/web_qlsp/Public/Css/style.css?v=1.1">
+    <link rel="stylesheet" href="/web_qlsp/Public/Css/logo.css?v=1.0">
     <link rel="stylesheet" href="/web_qlsp/Public/Css/contact.css?v=1.0">
     <link rel="stylesheet" href="/web_qlsp/Public/Css/nam.css?v=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
@@ -22,8 +23,9 @@
 <nav class="navbar navbar-expand-lg sticky-top bg-white">
     <div class="container-fluid px-lg-5">
         <a class="navbar-brand me-4" href="/web_qlsp/home">
-            <span class="fw-bold" style="font-size: 22px; letter-spacing: -1.5px;">COOL</span><span style="color:#2f5acf; font-weight: 900;">.ME</span>
-        </a>
+<div class="logo-coolmate-tech">
+  COOLMATE<span class="dot">.</span>
+</div>     </a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>

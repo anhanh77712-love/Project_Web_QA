@@ -1,0 +1,16 @@
+.logo-coolmate-tech {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 35px;
+  font-weight: 900;
+  font-style: italic;
+  background: linear-gradient(90deg, #000 60%, #2f5acf 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -2px;
+  filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.1));
+}
+
+.logo-coolmate-tech .dot {
+  -webkit-text-fill-color: #2f5acf; /* Giữ dấu chấm màu xanh nổi bật */
+  font-style: normal;
+}
