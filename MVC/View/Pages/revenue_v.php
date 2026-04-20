@@ -216,12 +216,18 @@
                     document.getElementById('full-page-loading').style.display = 'none';
                     document.getElementById('main-content').style.display = 'block';
 
-                    // Re-init DataTable nếu cần thiết
+                    // Re-init DataTable với config ngôn ngữ và phân trang mũi tên
                     if ($.fn.DataTable.isDataTable('#ordersTable')) {
                         $('#ordersTable').DataTable().destroy();
                     }
                     $('#ordersTable').DataTable({
-                        language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/vi.json" },
+                        language: { 
+                            url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/vi.json",
+                            paginate: {
+                                previous: '<i class="fa-solid fa-chevron-left"></i>',
+                                next: '<i class="fa-solid fa-chevron-right"></i>'
+                            }
+                        },
                         pageLength: 10,
                         order: [[1, "desc"]]
                     });
