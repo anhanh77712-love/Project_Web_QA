@@ -51,9 +51,7 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Giới tính <span class="text-danger">*</span></label>
                             <select class="form-select" name="gender" id="gender" required>
-                                <option value="Nam">Nam</option>
-                                <option value="Nữ">Nữ</option>
-                                <option value="Unisex">Unisex</option>
+                                <option value="nam">Nam</option>
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
@@ -146,11 +144,15 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="fw-bold">Màu sắc</label>
-                            <input type="text" id="v_color" name="color" class="form-control" required>
+                            <select id="v_color" name="color" class="form-select" required>
+                                <option value="">-- Chọn màu --</option>
+                            </select>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="fw-bold">Kích cỡ</label>
-                            <input type="text" id="v_size" name="size" class="form-control" required>
+                            <select id="v_size" name="size" class="form-select" required>
+                                <option value="">-- Chọn kích cỡ --</option>
+                            </select>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="fw-bold">Giá nhập</label>
@@ -203,6 +205,63 @@
     };
     const getTextColor = (color) => ['trắng','trang','white'].includes(color.toLowerCase()) ? '#000' : '#FFF';
 
+    const defaultVariantColorOptions = ['Đen','Trắng','Đỏ','Xanh','Vàng','Hồng','Xám','Nâu','Tím','Cam'];
+    const defaultVariantSizeOptions = ['XS','S','M','L','XL','XXL','XXXL'];
+
+    const getVariantOptions = (currentVariantId, selectedColor, selectedSize) => {
+        const colorSet = new Set(defaultVariantColorOptions);
+        const sizeSet = new Set(defaultVariantSizeOptions);
+        const otherColors = new Set();
+        const otherSizes = new Set();
+
+        globalVariants.forEach(v => {
+            if (v.color && v.color.trim() !== '') {
+                colorSet.add(v.color.trim());
+                if (v.id != currentVariantId) otherColors.add(v.color.trim());
+            }
+            if (v.size && v.size.trim() !== '') {
+                sizeSet.add(v.size.trim());
+                if (v.id != currentVariantId) otherSizes.add(v.size.trim());
+            }
+        });
+
+        const colors = Array.from(colorSet).sort((a, b) => a.localeCompare(b, 'vi'));
+        const sizes = Array.from(sizeSet).sort((a, b) => a.localeCompare(b, 'vi'));
+
+        // Màu luôn hiển thị đầy đủ tất cả
+        const availableColors = colors;
+
+        // Kích thước lọc theo màu nếu có selectedColor
+        const availableSizes = selectedColor ? sizes.filter(size => size === selectedSize || !otherSizes.has(size)) : sizes;
+
+        return {
+            colors: availableColors,
+            sizes: availableSizes
+        };
+    };
+
+    const populateVariantSelects = (selectedColor, selectedSize, currentVariantId = null) => {
+        const colorSelect = document.getElementById('v_color');
+        const sizeSelect = document.getElementById('v_size');
+        const { colors, sizes } = getVariantOptions(currentVariantId, selectedColor, selectedSize);
+
+        colorSelect.innerHTML = '<option value="">-- Chọn màu --</option>';
+        colors.forEach(color => {
+            colorSelect.insertAdjacentHTML('beforeend', `<option value="${color}">${color}</option>`);
+        });
+        if (selectedColor && !colors.includes(selectedColor)) {
+            colorSelect.insertAdjacentHTML('afterbegin', `<option value="${selectedColor}">${selectedColor}</option>`);
+        }
+
+        sizeSelect.innerHTML = '<option value="">-- Chọn kích cỡ --</option>';
+        sizes.forEach(size => {
+            sizeSelect.insertAdjacentHTML('beforeend', `<option value="${size}">${size}</option>`);
+        });
+        if (selectedSize && !sizes.includes(selectedSize)) {
+            sizeSelect.insertAdjacentHTML('afterbegin', `<option value="${selectedSize}">${selectedSize}</option>`);
+        }
+    };
+
     function generateSlug(title) {
         let slug = title.toLowerCase();
         slug = slug.replace(/á|à|ả|ạ|ã|ă|ắ|ằ|ẳ|ẵ|ặ|â|ấ|ầ|ẩ|ẫ|ậ/gi, 'a').replace(/é|è|ẻ|ẽ|ẹ|ê|ế|ề|ể|ễ|ệ/gi, 'e').replace(/i|í|ì|ỉ|ĩ|ị/gi, 'i').replace(/ó|ò|ỏ|õ|ọ|ô|ố|ồ|ổ|ỗ|ộ|ơ|ớ|ờ|ở|ỡ|ợ/gi, 'o').replace(/ú|ù|ủ|ũ|ư|ứ|ừ|ử|ữ|ự/gi, 'u').replace(/ý|ỳ|ỷ|ỹ|ỵ/gi, 'y').replace(/đ/gi, 'd');
@@ -232,7 +291,7 @@
                     // Đổ Thông tin cơ bản
                     document.getElementById('name').value = p.name;
                     document.getElementById('slug').value = p.slug;
-                    document.getElementById('gender').value = p.gender || 'Nam';
+                    document.getElementById('gender').value = p.gender || 'nam';
                     document.getElementById('is_sale').checked = (p.is_sale == 1);
                     document.getElementById('base_price').value = p.base_price;
                     document.getElementById('description').value = p.description;
@@ -349,6 +408,7 @@
 
         document.getElementById('v_variant_id').value = v.id;
         document.getElementById('v_upload_variant_id').value = v.id;
+        populateVariantSelects(v.color, v.size, v.id);
         document.getElementById('v_color').value = v.color;
         document.getElementById('v_size').value = v.size;
         document.getElementById('v_input_price').value = v.input_price;
@@ -358,6 +418,15 @@
 
         new bootstrap.Modal(document.getElementById('editVariantModal')).show();
     }
+
+    // Event listeners cho select màu và kích thước
+    document.getElementById('v_color').addEventListener('change', function() {
+        const selectedColor = this.value;
+        const currentVariantId = document.getElementById('v_variant_id').value;
+        populateVariantSelects(selectedColor, '', currentVariantId);
+        document.getElementById('v_color').value = selectedColor;
+        document.getElementById('v_size').value = '';
+    });
 
     // Vẽ hình ảnh trong Modal
     function renderVariantImages(images) {
