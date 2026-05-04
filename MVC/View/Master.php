@@ -106,7 +106,7 @@
 
         <main class="content">
                 <?php
-                    include_once "./MVC/View/Pages/".$data['Page'].".php";
+                    include_once "./MVC/View/Pages/".$Page.".php";
                 ?>
         </main>
 

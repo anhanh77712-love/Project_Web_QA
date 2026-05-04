@@ -78,7 +78,6 @@ class revenue extends controllers
         exit;
     }
 
-    // 3. API XUẤT EXCEL (Giữ nguyên logic của bạn, chỉ chuyển thành method GET)
     public function export_excel()
     {
         $from   = $_GET['from_date'] ?? '';
