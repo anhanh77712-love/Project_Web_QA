@@ -82,27 +82,26 @@
     Đánh giá sản phẩm
 </a>
 
+<?php if (isset($_SESSION['user_id'])): ?>
+    <a href="/web_qlsp/login/logout" class="nav-link text-danger" style="margin-top: 40px;">
+        <i class="fas fa-sign-out-alt"></i> Đăng xuất
+    </a>
+<?php endif; ?>
+
 </div>
 <div class="page">
+
     <header class="header">
-            <h4>Quản lý hệ thống</h4>
-            
-            <div class="user-info d-flex align-items-center">
-                <?php if (isset($_SESSION['user_id'])): ?>
-                    <div class="dropdown">
-                        <a href="#" class="text-dark dropdown-toggle text-decoration-none d-flex align-items-center" id="userMenu" data-bs-toggle="dropdown">
-                            <i class="fas fa-user-check fs-5 me-2 text-success"></i> 
-                            <span class="small fw-bold">
-                                <?php echo $_SESSION['user_name']; ?>
-                            </span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
-                            <li><a class="dropdown-item text-muted" href="/web_qlsp/login/logout"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
-                        </ul>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </header>
+        <h4>Quản lý hệ thống</h4>
+        <div class="user-info d-flex align-items-center">
+            <?php if (isset($_SESSION['user_id'])): ?>
+                <span class="text-dark d-flex align-items-center">
+                    <i class="fas fa-user-check fs-5 me-2 text-success"></i>
+                    <span class="small fw-bold"><?php echo $_SESSION['user_name']; ?></span>
+                </span>
+            <?php endif; ?>
+        </div>
+    </header>
 
         <main class="content">
                 <?php
@@ -114,6 +113,16 @@
 
 </div>
 
+
+    <style>
+        .header {
+            position: relative !important;
+            z-index: 1050 !important;
+        }
+        .content, .main-content, .toolbar-container, .card-table, table, tbody {
+            z-index: 1 !important;
+        }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     </body>
