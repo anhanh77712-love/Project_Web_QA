@@ -3,6 +3,23 @@ class reviews extends controllers {
     private $review;
     
     function __construct() {
+        $current_uri = $_SERVER['REQUEST_URI'];
+
+    $is_customer_api = (
+        strpos($current_uri, '/reviews/add') !== false || 
+        strpos($current_uri, '/reviews/edit_user') !== false || 
+        strpos($current_uri, '/reviews/delete_user') !== false || 
+        strpos($current_uri, '/reviews/api_get_by_product') !== false
+    );
+
+    if ($is_customer_api) {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        $this->review = $this->model('reviews_m'); 
+        
+        return; 
+    }
                 parent::__construct();
         $this->review = $this->model('reviews_m');
     }
