@@ -4,6 +4,7 @@ class payment extends controllers_customer {
     private $product_detail_model;
 
     function __construct() {
+        parent::__construct(); // Vẫn gọi cha để khởi động session
         $this->cart_model = $this->model('cart_m');
         $this->product_detail_model = $this->model('product_detail_m');
     }
