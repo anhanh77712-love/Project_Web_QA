@@ -6,6 +6,21 @@ class profile extends controllers_customer {
 
     function __construct() {
         parent::__construct(); // Vẫn gọi cha để khởi động session
+        if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin') {
+            
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' || strpos($_SERVER['REQUEST_URI'], 'add') !== false) {
+                header('Content-Type: application/json');
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Tài khoản Quản trị viên (Admin) không có quyền này!']);
+                exit;
+            }
+
+            echo "<script>
+                    alert('Lỗi: Bạn đang đăng nhập bằng quyền Admin, không có quyền này!');
+                    window.location.href = '/web_qlsp/home';
+                  </script>";
+            exit;
+        }
         $this->menu_categories = $this->model('master_customer_m');
         $this->provinces_model = $this->model('provinces_m');
         $this->profile_model = $this->model('profile_m');

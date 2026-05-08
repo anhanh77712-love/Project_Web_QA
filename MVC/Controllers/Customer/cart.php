@@ -8,6 +8,23 @@ class cart extends controllers_customer
 
     public function __construct()
     {
+        parent::__construct(); 
+
+       if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin') {
+            
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' || strpos($_SERVER['REQUEST_URI'], 'add') !== false) {
+                header('Content-Type: application/json');
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Tài khoản Quản trị viên (Admin) không có quyền này!']);
+                exit;
+            }
+
+            echo "<script>
+                    alert('Lỗi: Bạn đang đăng nhập bằng quyền Admin, không có quyền này!');
+                    window.location.href = '/web_qlsp/home';
+                  </script>";
+            exit;
+        }
         $this->menu_categories      = $this->model('master_customer_m');
         $this->provinces_model      = $this->model('provinces_m');
         $this->cart_model           = $this->model('cart_m');
@@ -43,7 +60,6 @@ class cart extends controllers_customer
         $discount   = 0;
         $total      = $subtotal + $shipping - $discount;
 
-        // 5. TRUYỀN DỮ LIỆU SANG VIEW
         $this->view('Master_customer', [
             'Page'            => 'cart_v',
             'menu_categories' => $this->menu_categories->categories_selectAll(),
@@ -85,7 +101,7 @@ class cart extends controllers_customer
 
         $product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
         $quantity   = isset($_POST['quantity']) ? max(1, intval($_POST['quantity'])) : 1;
-        if ($quantity > 5) $quantity = 5;
+        if ($quantity > 2) $quantity = 2;
         $size       = isset($_POST['size']) ? trim($_POST['size']) : '';
         $color      = isset($_POST['color']) ? trim($_POST['color']) : '';
         $variant_id = isset($_POST['variant_id']) ? intval($_POST['variant_id']) : null;
@@ -141,13 +157,13 @@ class cart extends controllers_customer
             $currentQty = $_SESSION['cart'][$cart_key]['quantity'];
             $newTotal = $currentQty + $quantity;
             
-            if ($currentQty >= 5) {
+            if ($currentQty >= 2) {
                 http_response_code(400);
-                echo json_encode(['success' => false, 'message' => 'Đã đạt giới hạn 5 sản phẩm/loại!', 'limit_reached' => true]); exit;
+                echo json_encode(['success' => false, 'message' => 'Đã đạt giới hạn 2 sản phẩm/loại!', 'limit_reached' => true]); exit;
             }
             
-            if ($newTotal > 5) {
-                $_SESSION['cart'][$cart_key]['quantity'] = 5;
+            if ($newTotal > 2) {
+                $_SESSION['cart'][$cart_key]['quantity'] = 2;
                 $isLimitReached = true;
             } else {
                 $_SESSION['cart'][$cart_key]['quantity'] = $newTotal;
@@ -155,7 +171,7 @@ class cart extends controllers_customer
         } else {
             $_SESSION['cart'][$cart_key] = [
                 'id' => $product_id, 'name' => $name, 'price' => $price, 'image' => $image,
-                'quantity' => min(5, $quantity), 'size' => $size, 'color' => $color, 'variant_id' => $variant_id,
+                'quantity' => min(2, $quantity), 'size' => $size, 'color' => $color, 'variant_id' => $variant_id,
             ];
         }
 
@@ -171,7 +187,7 @@ class cart extends controllers_customer
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $cart_key = $_POST['cart_key'] ?? '';
-            $quantity = max(1, min(5, intval($_POST['quantity'] ?? 1)));
+            $quantity = max(1, min(2, intval($_POST['quantity'] ?? 1)));
 
             if (! isset($_SESSION['cart'][$cart_key])) {
                 echo json_encode(['success' => false, 'message' => 'Sản phẩm không tồn tại trong giỏ hàng']); exit;
@@ -247,6 +263,11 @@ class cart extends controllers_customer
         header('Content-Type: application/json');
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Kiểm tra user đã đăng nhập chưa
+            if (! isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+                echo json_encode(['success' => false, 'message' => 'Vui lòng đăng nhập để tiếp tục đặt hàng!', 'require_login' => true]); exit;
+            }
+
             if (! isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
                 echo json_encode(['success' => false, 'message' => 'Giỏ hàng của bạn đang trống!']); exit;
             }

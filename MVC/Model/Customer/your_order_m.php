@@ -154,16 +154,29 @@ class your_order_m extends connectDB {
         $user_id = (int)$user_id;
         
         // Kiểm tra đơn hàng có thuộc về user và đang shipping không
-        $check = "SELECT id, status FROM orders WHERE id = $order_id AND user_id = $user_id AND status = 'shipping'";
+        $check = "SELECT id, status, total_money FROM orders WHERE id = $order_id AND user_id = $user_id AND status = 'shipping'";
         $result = mysqli_query($this->con, $check);
         
         if (mysqli_num_rows($result) == 0) {
             return false; // Không thể xác nhận
         }
         
+        $order = mysqli_fetch_assoc($result);
+        
         // Cập nhật trạng thái
         $sql = "UPDATE orders SET status = 'completed' WHERE id = $order_id";
-        return mysqli_query($this->con, $sql);
+        if (!mysqli_query($this->con, $sql)) {
+            return false;
+        }
+        
+        // Cộng điểm cho user: tổng tiền chia 1000 (1 điểm = 1.000đ)
+        $points_earned = floor($order['total_money'] / 1000);
+        if ($points_earned > 0) {
+            $update_points = "UPDATE users SET points = COALESCE(points, 0) + $points_earned WHERE id = $user_id";
+            mysqli_query($this->con, $update_points);
+        }
+        
+        return true;
     }
 }
 ?>

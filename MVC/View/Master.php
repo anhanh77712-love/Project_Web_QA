@@ -81,6 +81,10 @@
     <div class="sb-nav-link-icon"><i class="fa-solid fa-star"></i></div>
     Đánh giá sản phẩm
 </a>
+<a href="/web_qlsp/home" class="nav-link" target="_blank">
+    <div class="sb-nav-link-icon"><i class="fa-solid fa-store"></i></div>
+    Xem trang khách hàng
+</a>
 
 <?php if (isset($_SESSION['user_id'])): ?>
     <a href="/web_qlsp/login/logout" class="nav-link text-danger" style="margin-top: 40px;">

@@ -282,7 +282,7 @@ $(document).ready(function() {
     window.updateQty = function(cartKey, delta) {
         const input = $('input[data-key="'+cartKey+'"]');
         let newQty = parseInt(input.val()) + delta;
-        if (newQty < 1 || newQty > 5) return;
+        if (newQty < 1 || newQty > 2) return;
 
         $.ajax({
             url: "/web_qlsp/cart/update_quantity",
@@ -344,7 +344,19 @@ $(document).ready(function() {
     $(document).on('change', '.cart-check', updateTotal);
 
     // 6. ĐẶT HÀNG AJAX
-    $('#btnOrder').click(function() { $('#checkoutForm').submit(); });
+    $('#btnOrder').click(function() { 
+        const userLoggedIn = <?= isset($_SESSION['user_id']) && !empty($_SESSION['user_id']) ? 'true' : 'false' ?>;
+        if (!userLoggedIn) {
+            Swal.fire({
+                title: 'Yêu cầu đăng nhập',
+                text: 'Vui lòng đăng nhập để tiếp tục đặt hàng!',
+                icon: 'warning',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+        $('#checkoutForm').submit(); 
+    });
 
     $('#checkoutForm').on('submit', function(e) {
         e.preventDefault();
@@ -365,6 +377,19 @@ $(document).ready(function() {
                 if (res.success) {
                     Swal.fire({ icon: 'success', title: 'Đặt hàng thành công!', text: 'Đang chuyển hướng...', timer: 2000, showConfirmButton: false }).then(() => {
                         window.location.href = res.redirect_url;
+                    });
+                } else if (res.require_login) {
+                    Swal.fire({
+                        title: 'Yêu cầu đăng nhập',
+                        text: res.message,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Đăng nhập ngay',
+                        cancelButtonText: 'Hủy'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '/web_qlsp/login';
+                        }
                     });
                 } else Swal.fire('Lỗi', res.message, 'error');
             }
