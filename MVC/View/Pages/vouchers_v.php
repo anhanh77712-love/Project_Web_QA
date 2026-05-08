@@ -13,7 +13,6 @@
             <button type="submit" class="btn btn-dark-blue"><i class="fas fa-search"></i> Tìm</button>
             <button type="button" class="btn btn-light-gray" onclick="resetSearch()"><i class="fas fa-undo-alt"></i> Làm mới</button>
             <button type="button" class="btn btn-green" onclick="exportExcel()"><i class="fas fa-file-excel"></i> Xuất Excel</button>
-            <button type="button" class="btn btn-blue" data-bs-toggle="modal" data-bs-target="#importExcelModal"><i class="fas fa-file-import"></i> Nhập Excel</button>
             <button type="button" class="btn btn-dark-blue" data-bs-toggle="modal" data-bs-target="#addVoucherModal"><i class="fas fa-plus"></i> Thêm Voucher</button>
         </div>
     </form>

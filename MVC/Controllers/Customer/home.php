@@ -8,11 +8,7 @@ class home extends controllers_customer {
         $this->home = $this->model('home_m');
         $this->menu_categories = $this->model('master_customer_m');
         $this->provinces_model = $this->model('provinces_m');
-        // if (isset($_SESSION['user_role']) && $_SESSION['user_role'] == 'admin') {
-        //     // Admin không được ở trang Home, đá về trang quản trị
-        //     header("Location: /web_qlsp/overview");
-        //     exit();
-        // }
+       
     }
 
     // 1. CHỈ TẢI GIAO DIỆN (Trống rỗng, tải cực nhanh)
