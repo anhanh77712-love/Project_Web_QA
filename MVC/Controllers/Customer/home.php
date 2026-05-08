@@ -5,8 +5,6 @@ class home extends controllers_customer {
     private $provinces_model;
     
     function __construct() {
-                        parent::__construct();
-
         $this->home = $this->model('home_m');
         $this->menu_categories = $this->model('master_customer_m');
         $this->provinces_model = $this->model('provinces_m');
