@@ -124,6 +124,17 @@
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Tự động tìm tất cả các modal trong hệ thống và đưa ra ngoài cùng thẻ <body>
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                document.body.appendChild(modal);
+            });
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     </body>
 </html>
