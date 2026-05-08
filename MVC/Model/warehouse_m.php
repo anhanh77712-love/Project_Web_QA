@@ -23,68 +23,106 @@ class warehouse_m extends connectDB {
 
     // Core list query for warehouse items (products with optional variants)
     function warehouse_selectItems($q = '', $category_id = '', $status = '') {
-        $thresholdExpr = $this->hasColumn('products','low_stock_threshold') ? 'COALESCE(p.low_stock_threshold, 5)' : '5';
-        // Giá nhập lấy theo biến thể: product_variants.input_price nếu có; fallback giá tại products
-        if ($this->hasColumn('product_variants','input_price')) {
-            $costExpr = 'COALESCE(pv.input_price, 0)';
-        } elseif ($this->hasColumn('products','input_prices')) {
-            $costExpr = 'COALESCE(p.input_prices, 0)';
-        } elseif ($this->hasColumn('products','import_price')) {
-            $costExpr = 'COALESCE(p.import_price, 0)';
-        } elseif ($this->hasColumn('products','cost_price')) {
-            $costExpr = 'COALESCE(p.cost_price, 0)';
-        } else {
-            $costExpr = 'COALESCE(p.base_price, 0)';
-        }
 
-        $sql = "SELECT 
-                    p.id AS product_id,
-                    p.name AS product_name,
-                    p.base_price,
-                    $costExpr AS cost_price,
-                    p.thumbnail,
-                    c.name AS category_name,
-                    pv.id AS variant_id,
-                    pv.color,
-                    pv.size,
-                    COALESCE(pv.stock, 0) AS stock_quantity,
-                    0 AS reserved_quantity,
-                    $thresholdExpr AS threshold,
-                    CASE WHEN pv.id IS NULL THEN CONCAT('P-', p.id) ELSE CONCAT('PV-', pv.id) END AS sku
-                FROM products p
-                LEFT JOIN product_variants pv ON pv.product_id = p.id
-                LEFT JOIN categories c ON p.category_id = c.id
-                WHERE 1=1";
+    // Ngưỡng cảnh báo tồn kho
+    $thresholdExpr = 5;
 
-        // Filters
-        if (!empty($category_id)) {
-            $category_id = intval($category_id);
-            $sql .= " AND p.category_id = $category_id";
-        }
-        if (!empty($q)) {
-            $q = mysqli_real_escape_string($this->con, $q);
-            $like = "%$q%";
-            $sql .= " AND p.name LIKE '$like'";
-        }
-        if (!empty($status)) {
-            // Apply status filter based on stock vs threshold from variant stock only
-            if ($status === 'out') {
-                $sql .= " AND COALESCE(pv.stock, 0) = 0";
-            } elseif ($status === 'low') {
-                $sql .= " AND COALESCE(pv.stock, 0) > 0 AND COALESCE(pv.stock, 0) <= $thresholdExpr";
-            } elseif ($status === 'ok') {
-                $sql .= " AND COALESCE(pv.stock, 0) > $thresholdExpr";
-            }
-        }
+    // Luôn dùng base_price làm giá
+    $costExpr = 'COALESCE(p.base_price, 0)';
 
-        $sql .= " ORDER BY p.name ASC, pv.id ASC";
-        $res = mysqli_query($this->con, $sql);
-        $items = [];
-        if ($res) {
-            while ($row = mysqli_fetch_assoc($res)) { $items[] = $row; }
-        }
-        return $items;
+    // Câu SQL chính
+    $sql = "SELECT 
+                p.id AS product_id,
+                p.name AS product_name,
+                p.base_price,
+                $costExpr AS cost_price,
+                p.thumbnail,
+                c.name AS category_name,
+                pv.id AS variant_id,
+                pv.color,
+                pv.size,
+                COALESCE(pv.stock, 0) AS stock_quantity,
+                0 AS reserved_quantity,
+                $thresholdExpr AS threshold
+
+            FROM products p
+
+            LEFT JOIN product_variants pv 
+                ON pv.product_id = p.id
+
+            LEFT JOIN categories c 
+                ON p.category_id = c.id
+
+            WHERE 1=1";
+
+    // =========================
+    // FILTER CATEGORY
+    // =========================
+    if (!empty($category_id)) {
+
+        $category_id = intval($category_id);
+
+        $sql .= " AND p.category_id = $category_id";
     }
+
+    // =========================
+    // FILTER SEARCH
+    // =========================
+    if (!empty($q)) {
+
+        $q = mysqli_real_escape_string($this->con, $q);
+
+        $like = "%$q%";
+
+        $sql .= " AND p.name LIKE '$like'";
+    }
+
+    // =========================
+    // FILTER STATUS
+    // =========================
+    if (!empty($status)) {
+
+        // Hết hàng
+        if ($status === 'out') {
+
+            $sql .= " AND COALESCE(pv.stock, 0) = 0";
+        }
+
+        // Sắp hết
+        elseif ($status === 'low') {
+
+            $sql .= "
+                AND COALESCE(pv.stock, 0) > 0
+                AND COALESCE(pv.stock, 0) <= $thresholdExpr
+            ";
+        }
+
+        // Còn nhiều hàng
+        elseif ($status === 'ok') {
+
+            $sql .= "
+                AND COALESCE(pv.stock, 0) > $thresholdExpr
+            ";
+        }
+    }
+
+    $sql .= " ORDER BY p.name ASC, pv.id ASC";
+
+   
+    $res = mysqli_query($this->con, $sql);
+
+    $items = [];
+
+    if ($res) {
+
+        while ($row = mysqli_fetch_assoc($res)) {
+
+            $items[] = $row;
+        }
+    }
+
+    return $items;
+}
 
     // Adjust stock by delta (variant required as products table has no stock column)
     function warehouse_adjustStock($product_id, $variant_id, $delta) {

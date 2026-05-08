@@ -5,6 +5,7 @@ class profile extends controllers_customer {
     private $profile_model;
 
     function __construct() {
+        
         $this->menu_categories = $this->model('master_customer_m');
         $this->provinces_model = $this->model('provinces_m');
         $this->profile_model = $this->model('profile_m');

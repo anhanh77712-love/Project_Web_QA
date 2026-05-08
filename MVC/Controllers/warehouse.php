@@ -48,9 +48,9 @@ class warehouse extends controllers {
             if (is_array($items) && count($items) > 0) {
                 foreach ($items as $it) {
                     $stock = intval($it['stock_quantity'] ?? 0);
-                    $threshold = intval($it['threshold'] ?? 5);
-                    $reserved = intval($it['reserved_quantity'] ?? 0);
-                    $available = max(0, $stock - $reserved);
+                    $threshold = 5;
+                    $reserved = 0;
+                    $available = max(0, $stock - $reserved); // Số lượng có thể bán thực tế (đã trừ đi số lượng đã đặt nhưng chưa xuất kho)
 
                     $sum_stock += $stock;
                     if ($available == 0) { 
@@ -124,7 +124,6 @@ class warehouse extends controllers {
         $product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
         $variant_id = isset($_POST['variant_id']) && $_POST['variant_id'] !== '' ? intval($_POST['variant_id']) : null;
         $delta = isset($_POST['delta']) ? intval($_POST['delta']) : 0;
-        $reason = isset($_POST['reason']) ? trim($_POST['reason']) : '';
 
         if ($product_id <= 0 || $delta == 0 || $variant_id === null) {
             echo json_encode(['success' => false, 'message' => 'Thiếu dữ liệu hoặc chưa chọn biến thể']); exit;

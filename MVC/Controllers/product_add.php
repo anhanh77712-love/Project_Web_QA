@@ -5,6 +5,7 @@ class product_add extends controllers
     
     function __construct()
     {
+        parent::__construct();
         $this->prd_add = $this->model("product_m");
     }
 

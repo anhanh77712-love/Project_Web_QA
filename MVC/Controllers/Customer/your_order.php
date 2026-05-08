@@ -4,6 +4,7 @@ class your_order extends controllers_customer {
     private $menu_categories;
     
     function __construct() {
+        
         $this->your_order_m = $this->model('your_order_m');
         $this->menu_categories = $this->model('master_customer_m');
     }

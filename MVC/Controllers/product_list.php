@@ -6,7 +6,7 @@ class product_list extends controllers
     private $pdlist;
 
     public function __construct()
-    {
+    {        parent::__construct();
         $this->pdlist = $this->model("product_m");
     }
 

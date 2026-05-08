@@ -5,6 +5,7 @@ class vouchers extends controllers
     
     public function __construct()
     {
+        parent::__construct();
         $this->vouchers = $this->model('vouchers_m');
     }
 

@@ -5,6 +5,8 @@ class banners extends controllers
     
     public function __construct()
     {
+                parent::__construct();
+
         $this->banner = $this->model('banners_m');
     }
 

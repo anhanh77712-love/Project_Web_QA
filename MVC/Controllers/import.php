@@ -4,6 +4,8 @@ class import extends controllers {
     private $cate;
 
     function __construct() {
+                parent::__construct();
+
         // Khởi tạo model và gán vào thuộc tính private
         $this->sp = $this->model('product_m');
         $this->cate = $this->model('categories_m');

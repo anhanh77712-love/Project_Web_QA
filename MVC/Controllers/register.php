@@ -3,6 +3,7 @@ class register extends controllers {
     private $userModel;
 
     function __construct() {
+                parent::__construct();
         $this->userModel = $this->model("users_m");
     }
 

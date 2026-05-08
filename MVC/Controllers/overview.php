@@ -3,6 +3,8 @@ class overview extends controllers {
     private $ov;
     
     function __construct() {
+                parent::__construct();
+
         $this->ov = $this->model("overview_m");
     }
     

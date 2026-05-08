@@ -5,6 +5,8 @@ class categories_list extends controllers {
     private $ctlist;
     
     function __construct(){
+                parent::__construct();
+
         $this->ctlist = $this->model("categories_m");
     }
 

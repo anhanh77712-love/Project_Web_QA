@@ -2,6 +2,8 @@
 class orders extends controllers {
     private $orders;
     function __construct() {
+                parent::__construct();
+
         $this->orders = $this->model('orders_m');
     }
     

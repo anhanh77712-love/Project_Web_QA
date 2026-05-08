@@ -5,6 +5,8 @@ class collections extends controllers {
     private $collec;
 
     public function __construct() {
+                parent::__construct();
+
         $this->collec = $this->model("collections_m");
     }
 

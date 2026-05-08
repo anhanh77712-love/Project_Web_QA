@@ -3,6 +3,7 @@ class reviews extends controllers {
     private $review;
     
     function __construct() {
+                parent::__construct();
         $this->review = $this->model('reviews_m');
     }
     

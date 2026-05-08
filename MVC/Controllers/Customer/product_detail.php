@@ -4,6 +4,7 @@ class product_detail extends controllers_customer {
     private $menu_categories;
     
     function __construct() {
+        
         $this->product_model = $this->model("product_detail_m");
         $this->menu_categories = $this->model('master_customer_m');
     }

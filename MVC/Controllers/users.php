@@ -3,6 +3,7 @@ class users extends controllers {
     private $user;
     
     function __construct() {
+                parent::__construct();
         $this->user = $this->model('users_m');
     }
 

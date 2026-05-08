@@ -5,6 +5,7 @@ class product_list_customer extends controllers_customer {
     private $home_model;
     
     function __construct() {
+        
         $this->prd_list = $this->model("product_list_m");
         $this->menu_categories = $this->model('master_customer_m');
         $this->home_model = $this->model('home_m');

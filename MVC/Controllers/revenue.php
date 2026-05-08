@@ -5,6 +5,7 @@ class revenue extends controllers
 
     public function __construct()
     {
+                parent::__construct();
         $this->revenue = $this->model('revenue_m');
     }
 

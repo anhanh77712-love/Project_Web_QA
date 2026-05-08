@@ -4,6 +4,8 @@ class campaigns extends controllers {
     private $collection;
     
     function __construct() {
+                parent::__construct();
+
         $this->campaign = $this->model('campaigns_m');
         $this->collection = $this->model('collections_m');
     }
