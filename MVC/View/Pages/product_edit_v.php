@@ -207,36 +207,68 @@
 
     const defaultVariantColorOptions = ['Đen','Trắng','Đỏ','Xanh','Vàng','Hồng','Xám','Nâu','Tím','Cam'];
     const defaultVariantSizeOptions = ['XS','S','M','L','XL','XXL','XXXL'];
+    let variantMap = {};
+
+    const buildVariantMap = (excludeVariantId = null) => {
+        variantMap = {};
+        globalVariants.forEach(v => {
+            if (excludeVariantId && v.id == excludeVariantId) return;
+            if (!variantMap[v.color]) variantMap[v.color] = new Set();
+            variantMap[v.color].add(v.size);
+        });
+    };
+
+    const refreshColorOptions = (currentColor = '') => {
+        const colorSelect = document.getElementById('v_color');
+        Array.from(colorSelect.options).forEach(option => {
+            const color = option.value;
+            if (!color) return;
+            const sizesUsed = variantMap[color] ? Array.from(variantMap[color]) : [];
+            if (sizesUsed.length >= defaultVariantSizeOptions.length && color !== currentColor) {
+                option.disabled = true;
+                option.classList.add('d-none');
+            } else {
+                option.disabled = false;
+                option.classList.remove('d-none');
+            }
+        });
+    };
+
+    const refreshSizeOptions = (selectedColor = '') => {
+        const sizeSelect = document.getElementById('v_size');
+        Array.from(sizeSelect.options).forEach(option => {
+            option.disabled = false;
+            option.classList.remove('d-none');
+        });
+        if (!selectedColor) return;
+        const used = variantMap[selectedColor] ? Array.from(variantMap[selectedColor]) : [];
+        Array.from(sizeSelect.options).forEach(option => {
+            if (used.includes(option.value)) {
+                option.disabled = true;
+                option.classList.add('d-none');
+            }
+        });
+    };
 
     const getVariantOptions = (currentVariantId, selectedColor, selectedSize) => {
         const colorSet = new Set(defaultVariantColorOptions);
         const sizeSet = new Set(defaultVariantSizeOptions);
-        const otherColors = new Set();
-        const otherSizes = new Set();
 
         globalVariants.forEach(v => {
             if (v.color && v.color.trim() !== '') {
                 colorSet.add(v.color.trim());
-                if (v.id != currentVariantId) otherColors.add(v.color.trim());
             }
             if (v.size && v.size.trim() !== '') {
                 sizeSet.add(v.size.trim());
-                if (v.id != currentVariantId) otherSizes.add(v.size.trim());
             }
         });
 
         const colors = Array.from(colorSet).sort((a, b) => a.localeCompare(b, 'vi'));
         const sizes = Array.from(sizeSet).sort((a, b) => a.localeCompare(b, 'vi'));
 
-        // Màu luôn hiển thị đầy đủ tất cả
-        const availableColors = colors;
-
-        // Kích thước lọc theo màu nếu có selectedColor
-        const availableSizes = selectedColor ? sizes.filter(size => size === selectedSize || !otherSizes.has(size)) : sizes;
-
         return {
-            colors: availableColors,
-            sizes: availableSizes
+            colors,
+            sizes
         };
     };
 
@@ -408,7 +440,10 @@
 
         document.getElementById('v_variant_id').value = v.id;
         document.getElementById('v_upload_variant_id').value = v.id;
+        buildVariantMap(v.id);
         populateVariantSelects(v.color, v.size, v.id);
+        refreshColorOptions(v.color);
+        refreshSizeOptions(v.color);
         document.getElementById('v_color').value = v.color;
         document.getElementById('v_size').value = v.size;
         document.getElementById('v_input_price').value = v.input_price;
@@ -423,7 +458,10 @@
     document.getElementById('v_color').addEventListener('change', function() {
         const selectedColor = this.value;
         const currentVariantId = document.getElementById('v_variant_id').value;
+        buildVariantMap(currentVariantId);
         populateVariantSelects(selectedColor, '', currentVariantId);
+        refreshColorOptions(selectedColor);
+        refreshSizeOptions(selectedColor);
         document.getElementById('v_color').value = selectedColor;
         document.getElementById('v_size').value = '';
     });

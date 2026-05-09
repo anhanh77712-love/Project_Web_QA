@@ -226,63 +226,6 @@ class vouchers extends controllers
         exit;
     }
 
-    // 7. API: IMPORT EXCEL
-    public function api_import()
-    {
-        $this->setApiHeader();
-
-        if (!isset($_FILES['fileImport']) || empty($_FILES['fileImport']['tmp_name'])) {
-            echo json_encode(['success' => false, 'message' => 'Vui lòng chọn file Excel!']); exit;
-        }
-
-        $file = $_FILES['fileImport']['tmp_name'];
-
-        try {
-            require_once __DIR__ . '/../../Public/Classes/PHPExcel/IOFactory.php';
-            $objReader = PHPExcel_IOFactory::createReaderForFile($file);
-            $objExcel = $objReader->load($file);
-            $sheetData = $objExcel->getActiveSheet()->toArray(null, true, true, true);
-
-            $countSuccess = 0;
-            $countFail = 0;
-
-            for ($i = 2; $i <= count($sheetData); $i++) {
-                $code = trim($sheetData[$i]["B"] ?? '');
-                if (empty($code) || strtolower($code) == 'mã code') continue; 
-
-                $description    = $sheetData[$i]["C"] ?? '';
-                $type_raw       = $sheetData[$i]["D"] ?? ''; 
-                $discount_value = $sheetData[$i]["E"] ?? 0;
-                $max_raw        = $sheetData[$i]["F"] ?? ''; 
-                $min_order      = $sheetData[$i]["G"] ?? 0;
-                $usage_limit    = $sheetData[$i]["H"] ?? 0;
-                
-                $start_raw      = $sheetData[$i]["J"] ?? '';
-                $end_raw        = $sheetData[$i]["K"] ?? '';
-                $status_raw     = $sheetData[$i]["L"] ?? ''; 
-
-                $discount_type = (trim($type_raw) == 'Theo %') ? 'percent' : 'fixed';
-                $max_discount_amount = empty($max_raw) ? "NULL" : str_replace(',', '', $max_raw);
-                $min_order_value = empty($min_order) ? 0 : str_replace(',', '', $min_order);
-                $discount_value  = str_replace(',', '', $discount_value);
-                $usage_limit     = str_replace(',', '', $usage_limit);
-
-                $start_date = is_numeric($start_raw) ? date('Y-m-d H:i:s', PHPExcel_Shared_Date::ExcelToPHP($start_raw)) : date('Y-m-d H:i:s', strtotime($start_raw));
-                $end_date = is_numeric($end_raw) ? date('Y-m-d H:i:s', PHPExcel_Shared_Date::ExcelToPHP($end_raw)) : date('Y-m-d H:i:s', strtotime($end_raw));
-                $status = (trim($status_raw) == 'Hoạt động') ? 1 : 0;
-
-                $kq = $this->vouchers->vouchers_insert($code, $description, $discount_type, $discount_value, $max_discount_amount, $min_order_value, $usage_limit, $start_date, $end_date, $status);
-
-                if ($kq) $countSuccess++; else $countFail++;
-            }
-
-            echo json_encode(['success' => true, 'message' => "Đã nhập thành công $countSuccess mã. Lỗi/trùng: $countFail mã."]);
-            exit;
-
-        } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => "Lỗi xử lý file Excel: " . $e->getMessage()]);
-            exit;
-        }
-    }
+   
 }
 ?>

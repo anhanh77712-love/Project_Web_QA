@@ -18,8 +18,6 @@ class vouchers_m extends connectDB
     public function vouchers_insert($code, $description, $discount_type, $discount_value, $max_discount_amount, $min_order_value, $usage_limit, $start_date, $end_date, $status = 1)
     {
 
-        // Cảnh báo bảo mật: Bạn nên dùng mysqli_real_escape_string để tránh lỗi SQL Injection
-        // Ví dụ: $code = mysqli_real_escape_string($this->con, $code);
 
         $sql = "INSERT INTO vouchers (
                 code,
@@ -86,8 +84,7 @@ class vouchers_m extends connectDB
         if(empty($keyword)){
             $sql = "SELECT * FROM vouchers ORDER BY id DESC";
         } else {
-            // Tìm theo Mã Code hoặc Mô tả
-            // Dùng mysqli_real_escape_string để tránh lỗi SQL khi tìm ký tự lạ
+            
             $keyword = mysqli_real_escape_string($this->con, $keyword);
             $sql = "SELECT * FROM vouchers 
                     WHERE code LIKE '%$keyword%' 
